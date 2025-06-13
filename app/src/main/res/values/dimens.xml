@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom Navigation -->
+    <dimen name="bottom_navigation_height">80dp</dimen>
+    
+    <!-- Margins and Paddings -->
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">16dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
+    <dimen name="margin_extra_large">32dp</dimen>
+    
+    <!-- Card and Container -->
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_elevation">6dp</dimen>
+    <dimen name="card_stroke_width">1dp</dimen>
+    
+    <!-- Icons -->
+    <dimen name="icon_size_small">24dp</dimen>
+    <dimen name="icon_size_medium">32dp</dimen>
+    <dimen name="icon_size_large">48dp</dimen>
+    
+    <!-- Text -->
+    <dimen name="text_size_large">24sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_caption">12sp</dimen>
+</resources> 

@@ -1,3 +1,96 @@
 <resources>
-    <string name="app_name">Android_Notification_Summarize_Native</string>
+    <string name="app_name">通知摘要助手</string>
+    
+    <!-- 主界面 -->
+    <string name="tab_notifications">通知</string>
+    <string name="tab_summaries">摘要</string>
+    <string name="settings">设置</string>
+    <string name="refresh">刷新</string>
+    
+    <!-- 权限相关 -->
+    <string name="permission_required_title">需要通知访问权限</string>
+    <string name="permission_required_message">应用需要通知访问权限才能监听和汇总通知。请在设置中授予权限。</string>
+    <string name="grant_permission">授予权限</string>
+    <string name="permission_denied_message">无法获取通知权限，应用功能将受限</string>
+    
+    <!-- 统计信息 -->
+    <string name="stats_placeholder">通知: 0 | 摘要: 0</string>
+    <string name="stats_format">通知: %1$d | 摘要: %2$d</string>
+    
+    <!-- 空状态 -->
+    <string name="no_notifications">暂无通知</string>
+    <string name="no_notifications_description">当有新通知时，它们会显示在这里</string>
+    <string name="no_summaries">暂无摘要</string>
+    <string name="no_summaries_description">当通知被汇总后，摘要会显示在这里</string>
+    
+    <!-- 排序 -->
+    <string name="sort_by_time">按时间排序</string>
+    <string name="sort_by_app">按应用排序</string>
+    
+    <!-- 通知详情 -->
+    <string name="notification_details">通知详情</string>
+    <string name="summary_details">摘要详情</string>
+    <string name="app_name_label">应用</string>
+    <string name="time_label">时间</string>
+    <string name="title_label">标题</string>
+    <string name="content_label">内容</string>
+    <string name="summary_label">摘要</string>
+    <string name="importance_label">重要性</string>
+    <string name="importance_low">低</string>
+    <string name="importance_medium">中</string>
+    <string name="importance_high">高</string>
+    
+    <!-- 设置页面 -->
+    <string name="notification_settings">通知设置</string>
+    <string name="persistent_high_priority">持久化高重要性通知</string>
+    <string name="persistent_high_priority_summary">高重要性摘要将显示为持久化通知</string>
+    <string name="app_colors">应用颜色</string>
+    <string name="app_colors_summary">自定义不同应用的通知颜色</string>
+    <string name="data_management">数据管理</string>
+    <string name="clean_old_data">清理旧数据</string>
+    <string name="clean_old_data_summary">删除7天前的通知和摘要</string>
+    <string name="about">关于</string>
+    <string name="version">版本</string>
+    
+    <!-- 对话框 -->
+    <string name="dialog_title_clean_data">清理数据</string>
+    <string name="dialog_message_clean_data">确定要删除7天前的所有通知和摘要吗？此操作不可撤销。</string>
+    <string name="dialog_title_color_picker">选择颜色</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+    
+    <!-- 错误消息 -->
+    <string name="error_loading_data">加载数据时出错</string>
+    <string name="error_permission_denied">权限被拒绝</string>
+    <string name="error_network">网络错误</string>
+    <string name="error_unknown">未知错误</string>
+    
+    <!-- 成功消息 -->
+    <string name="data_cleaned_successfully">数据清理完成</string>
+    <string name="color_updated_successfully">颜色更新成功</string>
+    <string name="settings_saved">设置已保存</string>
+    
+    <!-- 菜单 -->
+    <string name="menu_refresh">刷新</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_about">关于</string>
+    
+    <!-- 通知渠道 -->
+    <string name="channel_high_priority">高优先级摘要</string>
+    <string name="channel_normal_priority">普通摘要</string>
+    <string name="channel_low_priority">低优先级摘要</string>
+    
+    <!-- 工作状态 -->
+    <string name="service_running">通知监听服务运行中</string>
+    <string name="service_stopped">通知监听服务已停止</string>
+    
+    <!-- 帮助文本 -->
+    <string name="help_title">使用说明</string>
+    <string name="help_content">
+        1. 授予通知访问权限\n
+        2. 应用会自动监听通知\n
+        3. 符合条件的通知会被汇总\n
+        4. 查看通知和摘要历史\n
+        5. 在设置中自定义选项
+    </string>
 </resources>

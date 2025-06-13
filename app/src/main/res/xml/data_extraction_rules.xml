@@ -5,15 +5,12 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <!-- Use this flag to disable auto backup on Android 12+ -->
+        <include domain="root" />
+        <exclude domain="root" path="device_encrypted_files" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <include domain="root" />
+        <exclude domain="root" path="device_encrypted_files" />
     </device-transfer>
-    -->
 </data-extraction-rules>

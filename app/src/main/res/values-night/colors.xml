@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS Style Dark Mode Color System -->
+    
+    <!-- iOS System Colors (Dark Mode) -->
+    <color name="ios_blue">#FF0A84FF</color>
+    <color name="ios_green">#FF30D158</color>
+    <color name="ios_indigo">#FF5E5CE6</color>
+    <color name="ios_orange">#FFFF9F0A</color>
+    <color name="ios_pink">#FFFF375F</color>
+    <color name="ios_purple">#FFBF5AF2</color>
+    <color name="ios_red">#FFFF453A</color>
+    <color name="ios_teal">#FF64D2FF</color>
+    <color name="ios_yellow">#FFFFD60A</color>
+    
+    <!-- iOS Gray Colors (Dark Mode) -->
+    <color name="ios_gray">#FF8E8E93</color>
+    <color name="ios_gray2">#FF636366</color>
+    <color name="ios_gray3">#FF48484A</color>
+    <color name="ios_gray4">#FF3A3A3C</color>
+    <color name="ios_gray5">#FF2C2C2E</color>
+    <color name="ios_gray6">#FF1C1C1E</color>
+    
+    <!-- iOS Background Colors (Dark Mode) -->
+    <color name="ios_system_background">#FF000000</color>
+    <color name="ios_secondary_system_background">#FF1C1C1E</color>
+    <color name="ios_tertiary_system_background">#FF2C2C2E</color>
+    
+    <!-- iOS Grouped Background Colors (Dark Mode) -->
+    <color name="ios_system_grouped_background">#FF000000</color>
+    <color name="ios_secondary_system_grouped_background">#FF1C1C1E</color>
+    <color name="ios_tertiary_system_grouped_background">#FF2C2C2E</color>
+    
+    <!-- iOS Label Colors (Dark Mode) -->
+    <color name="ios_label">#FFFFFFFF</color>
+    <color name="ios_secondary_label">#FFEBEBF5</color>
+    <color name="ios_tertiary_label">#FFEBEBF5</color>
+    <color name="ios_quaternary_label">#FFEBEBF5</color>
+    
+    <!-- iOS Fill Colors (Dark Mode) -->
+    <color name="ios_system_fill">#FF787880</color>
+    <color name="ios_secondary_system_fill">#FF787880</color>
+    <color name="ios_tertiary_system_fill">#FF767680</color>
+    <color name="ios_quaternary_system_fill">#FF747480</color>
+    
+    <!-- iOS Separator Colors (Dark Mode) -->
+    <color name="ios_separator">#FF545458</color>
+    <color name="ios_opaque_separator">#FF38383A</color>
+    
+    <!-- Compatibility Colors (Dark Mode) -->
+    <color name="background">#FF000000</color>
+    <color name="surface">#FF1C1C1E</color>
+    <color name="on_surface">#FFFFFFFF</color>
+    <color name="on_background">#FFFFFFFF</color>
+    <color name="outline">#FF545458</color>
+    <color name="primary">#FF0A84FF</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="secondary">#FF5E5CE6</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    
+    <!-- Error Colors (Dark Mode) -->
+    <color name="error">#FFFF453A</color>
+    <color name="on_error">#FFFFFFFF</color>
+    <color name="error_container">#FF2C1B1B</color>
+    <color name="on_error_container">#FFFF453A</color>
+    
+    <!-- Warning Colors (Dark Mode) -->
+    <color name="warning">#FFFF9F0A</color>
+    <color name="on_warning">#FF000000</color>
+    
+    <!-- Success Colors (Dark Mode) -->
+    <color name="success">#FF30D158</color>
+    <color name="on_success">#FF000000</color>
+    
+    <!-- Surface Variant Colors (Dark Mode) -->
+    <color name="on_surface_variant">#FFEBEBF5</color>
+    <color name="outline_variant">#FF48484A</color>
+    
+    <!-- Bottom Navigation Colors (Dark Mode) -->
+    <color name="bottom_nav_selected">#FF0A84FF</color>
+    <color name="bottom_nav_unselected">#FF8E8E93</color>
+    
+    <!-- Importance Level Colors (Dark Mode) -->
+    <color name="importance_low">#FF30D158</color>     <!-- iOS Green Dark -->
+    <color name="importance_medium">#FFFF9F0A</color>  <!-- iOS Orange Dark -->
+    <color name="importance_high">#FFFF453A</color>    <!-- iOS Red Dark -->
+    
+    <!-- Status Colors (Dark Mode) -->
+    <color name="status_success">#FF30D158</color>
+    <color name="status_warning">#FFFF9F0A</color>
+    <color name="status_error">#FFFF453A</color>
+    
+    <!-- App Specific Colors (Dark Mode) -->
+    <color name="primary_blue">#FF0A84FF</color>
+    <color name="primary_blue_dark">#FF0051D5</color>
+    <color name="primary_blue_light">#FF64B5F6</color>
+
+    <!-- Material Design 3 Dark Theme Colors -->
+    
+    <!-- Primary Colors -->
+    <color name="md_theme_dark_primary">#D0BCFF</color>
+    <color name="md_theme_dark_onPrimary">#381E72</color>
+    <color name="md_theme_dark_primaryContainer">#4F378B</color>
+    <color name="md_theme_dark_onPrimaryContainer">#EADDFF</color>
+    
+    <!-- Secondary Colors -->
+    <color name="md_theme_dark_secondary">#CCC2DC</color>
+    <color name="md_theme_dark_onSecondary">#332D41</color>
+    <color name="md_theme_dark_secondaryContainer">#4A4458</color>
+    <color name="md_theme_dark_onSecondaryContainer">#E8DEF8</color>
+    
+    <!-- Tertiary Colors -->
+    <color name="md_theme_dark_tertiary">#EFB8C8</color>
+    <color name="md_theme_dark_onTertiary">#492532</color>
+    <color name="md_theme_dark_tertiaryContainer">#633B48</color>
+    <color name="md_theme_dark_onTertiaryContainer">#FFD8E4</color>
+    
+    <!-- Error Colors -->
+    <color name="md_theme_dark_error">#FFB4AB</color>
+    <color name="md_theme_dark_errorContainer">#93000A</color>
+    <color name="md_theme_dark_onError">#690005</color>
+    <color name="md_theme_dark_onErrorContainer">#FFDAD6</color>
+    
+    <!-- Background Colors -->
+    <color name="md_theme_dark_background">#1C1B1F</color>
+    <color name="md_theme_dark_onBackground">#E6E1E5</color>
+    
+    <!-- Surface Colors -->
+    <color name="md_theme_dark_surface">#1C1B1F</color>
+    <color name="md_theme_dark_onSurface">#E6E1E5</color>
+    <color name="md_theme_dark_surfaceVariant">#49454F</color>
+    <color name="md_theme_dark_onSurfaceVariant">#CAC4D0</color>
+    
+    <!-- Surface Container Colors -->
+    <color name="md_theme_dark_surfaceContainer">#211F26</color>
+    <color name="md_theme_dark_surfaceContainerHigh">#2B2930</color>
+    <color name="md_theme_dark_surfaceContainerHighest">#36343B</color>
+    <color name="md_theme_dark_surfaceContainerLow">#1C1B1F</color>
+    <color name="md_theme_dark_surfaceContainerLowest">#0F0D13</color>
+    
+    <!-- Outline Colors -->
+    <color name="md_theme_dark_outline">#938F99</color>
+    <color name="md_theme_dark_outlineVariant">#49454F</color>
+    
+    <!-- Other Colors -->
+    <color name="md_theme_dark_scrim">#000000</color>
+    <color name="md_theme_dark_inverseSurface">#E6E1E5</color>
+    <color name="md_theme_dark_inverseOnSurface">#313033</color>
+    <color name="md_theme_dark_inversePrimary">#6750A4</color>
+    
+    <!-- Compatibility Colors -->
+    <color name="primary">#D0BCFF</color>
+    <color name="on_primary">#381E72</color>
+    <color name="secondary">#CCC2DC</color>
+    <color name="on_secondary">#332D41</color>
+    <color name="background">#1C1B1F</color>
+    <color name="on_background">#E6E1E5</color>
+    <color name="surface">#1C1B1F</color>
+    <color name="on_surface">#E6E1E5</color>
+    <color name="error">#FFB4AB</color>
+    <color name="on_error">#690005</color>
+    <color name="outline">#938F99</color>
+    <color name="on_surface_variant">#CAC4D0</color>
+    <color name="outline_variant">#49454F</color>
+    
+    <!-- App Specific Colors -->
+    <color name="importance_high">#FFB4AB</color>
+    <color name="importance_medium">#FFB74D</color>
+    <color name="importance_low">#81C784</color>
+    
+    <!-- Status Colors -->
+    <color name="status_success">#81C784</color>
+    <color name="status_warning">#FFB74D</color>
+    <color name="status_error">#FFB4AB</color>
+    <color name="status_warning_background">#3E2723</color>
+    
+    <!-- Bottom Navigation -->
+    <color name="bottom_nav_selected">#D0BCFF</color>
+    <color name="bottom_nav_unselected">#938F99</color>
+</resources> 

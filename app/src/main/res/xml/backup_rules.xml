@@ -10,4 +10,8 @@
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
 -->
+    <!-- Include/exclude rules for backup -->
+    <include domain="file" path="." />
+    <exclude domain="file" path="cache" />
+    <exclude domain="file" path="temp" />
 </full-backup-content>
