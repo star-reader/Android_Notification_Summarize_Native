@@ -47,45 +47,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val sortBy: StateFlow<SortBy> = _sortBy.asStateFlow()
     
     init {
-        // 初始化时检查权限并加载数据
         checkPermissionAndLoadData()
-        
-        // 监听数据变化
         observeDataChanges()
     }
     
     /**
      * 检查权限并加载数据
      */
-    fun checkPermissionAndLoadData() {
+    private fun checkPermissionAndLoadData() {
         viewModelScope.launch {
-            _isLoading.value = true
-            
             try {
-                // 更新权限状态
+                _isLoading.value = true
                 _permissionStatus.value = PermissionHelper.getPermissionStatus(getApplication())
                 
                 if (_permissionStatus.value == PermissionHelper.PermissionStatus.GRANTED) {
-                    loadData()
+                    loadDataStats()
                 }
-                
-                // 加载数据统计
-                loadDataStats()
-                
             } catch (e: Exception) {
-                _errorMessage.value = "加载数据时出错: ${e.message}"
+                _errorMessage.value = "权限检查失败: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
-    }
-    
-    /**
-     * 加载通知和摘要数据
-     */
-    private fun loadData() {
-        // 不需要在这里直接collect，因为在observeDataChanges()中已经处理了
-        // 这里只是触发数据更新
     }
     
     /**
@@ -138,36 +121,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
-     * 设置排序方式
-     */
-    fun setSortBy(sortBy: SortBy) {
-        if (_sortBy.value != sortBy) {
-            _sortBy.value = sortBy
-            
-            // 重新排序当前数据
-            _notifications.value = sortNotifications(_notifications.value)
-            _summaries.value = sortSummaries(_summaries.value)
-        }
-    }
-    
-    /**
-     * 排序通知列表
+     * 排序通知列表 - 只按时间排序
      */
     private fun sortNotifications(notifications: List<NotificationData>): List<NotificationData> {
-        return when (_sortBy.value) {
-            SortBy.TIME -> notifications.sortedByDescending { it.time }
-            SortBy.APP_NAME -> notifications.sortedBy { it.appName }
-        }
+        return notifications.sortedByDescending { it.time }
     }
     
     /**
-     * 排序摘要列表
+     * 排序摘要列表 - 只按时间排序
      */
     private fun sortSummaries(summaries: List<SummaryData>): List<SummaryData> {
-        return when (_sortBy.value) {
-            SortBy.TIME -> summaries.sortedByDescending { it.time }
-            SortBy.APP_NAME -> summaries.sortedBy { it.appName }
-        }
+        return summaries.sortedByDescending { it.time }
     }
     
     /**
@@ -196,10 +160,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
-     * 排序方式枚举
+     * 排序方式枚举 - 只保留时间排序
      */
     enum class SortBy {
-        TIME,      // 按时间排序
-        APP_NAME   // 按应用名排序
+        TIME        // 按时间排序
     }
 } 

@@ -132,7 +132,7 @@ object MaterialDesignUtils {
                 bottomMargin = context.resources.getDimensionPixelSize(R.dimen.margin_small)
             }
             setImageResource(icon)
-            imageTintList = ContextCompat.getColorStateList(context, R.color.primary_blue)
+            imageTintList = ContextCompat.getColorStateList(context, R.color.primary)
         }
         cardContent.addView(iconView)
         

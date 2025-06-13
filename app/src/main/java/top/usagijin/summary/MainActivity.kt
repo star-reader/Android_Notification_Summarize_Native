@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupUI() {
         // 设置状态栏颜色和样式
-        window.statusBarColor = ContextCompat.getColor(this, R.color.primary_blue)
+        window.statusBarColor = ContextCompat.getColor(this, R.color.primary)
         window.navigationBarColor = SurfaceColors.SURFACE_2.getColor(this)
         
         // 设置状态栏文字颜色为白色

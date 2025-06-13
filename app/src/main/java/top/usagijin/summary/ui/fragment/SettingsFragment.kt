@@ -78,7 +78,7 @@ class SettingsFragment : Fragment() {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         // iOS风格的分组背景色
-        rootLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.ios_system_grouped_background))
+        rootLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.background))
         
         // 创建滚动视图
         val scrollView = ScrollView(context)
@@ -115,12 +115,12 @@ class SettingsFragment : Fragment() {
         errorLayout.orientation = LinearLayout.VERTICAL
         errorLayout.gravity = Gravity.CENTER
         errorLayout.setPadding(32, 32, 32, 32)
-        errorLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.ios_system_grouped_background))
+        errorLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.background))
         
         val errorText = TextView(context)
-        errorText.text = "⚠️ 加载设置时出错"
-        errorText.textSize = 17f // iOS标准字体大小
-        errorText.setTextColor(ContextCompat.getColor(context, R.color.ios_red))
+        errorText.text = "加载设置时出错"
+        errorText.textSize = 17f
+        errorText.setTextColor(ContextCompat.getColor(context, R.color.error))
         errorText.gravity = Gravity.CENTER
         errorText.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         
@@ -206,7 +206,7 @@ class SettingsFragment : Fragment() {
     }
     
     /**
-     * 创建iOS风格设置分组
+     * 创建设置分组
      */
     private fun createiOSSettingsSection(title: String, items: List<View>): View {
         val context = requireContext()
@@ -221,8 +221,8 @@ class SettingsFragment : Fragment() {
         // 分组标题
         val sectionTitle = TextView(context)
         sectionTitle.text = title.uppercase()
-        sectionTitle.textSize = 13f // iOS分组标题字体大小
-        sectionTitle.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        sectionTitle.textSize = 13f
+        sectionTitle.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         sectionTitle.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         sectionTitle.setPadding(16, 0, 16, 8)
         val titleParams = LinearLayout.LayoutParams(
@@ -233,21 +233,21 @@ class SettingsFragment : Fragment() {
         sectionTitle.layoutParams = titleParams
         sectionContainer.addView(sectionTitle)
         
-        // 创建iOS风格的卡片容器
+        // 创建卡片容器
         val card = MaterialCardView(context)
         card.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        card.radius = 16f // iOS风格的大圆角
-        card.cardElevation = 0f // iOS不使用阴影
-        card.setCardBackgroundColor(ContextCompat.getColor(context, R.color.ios_secondary_system_grouped_background))
+        card.radius = 16f
+        card.cardElevation = 0f
+        card.setCardBackgroundColor(ContextCompat.getColor(context, R.color.surface_variant))
         card.strokeWidth = 0
         
         // 创建卡片内容
         val cardContent = LinearLayout(context)
         cardContent.orientation = LinearLayout.VERTICAL
-        cardContent.setPadding(0, 0, 0, 0) // iOS风格无内边距
+        cardContent.setPadding(0, 0, 0, 0)
         
         // 添加设置项
         items.forEachIndexed { index, item ->
@@ -267,7 +267,7 @@ class SettingsFragment : Fragment() {
     }
     
     /**
-     * 创建iOS风格权限设置项
+     * 创建权限设置项
      */
     private fun createiOSPermissionSettingItem(): View {
         val context = requireContext()
@@ -275,7 +275,7 @@ class SettingsFragment : Fragment() {
         val itemContainer = LinearLayout(context)
         itemContainer.orientation = LinearLayout.HORIZONTAL
         itemContainer.gravity = Gravity.CENTER_VERTICAL
-        itemContainer.setPadding(20, 12, 20, 12) // iOS标准内边距
+        itemContainer.setPadding(20, 12, 20, 12)
         itemContainer.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -310,8 +310,8 @@ class SettingsFragment : Fragment() {
         // 主标题
         val titleView = TextView(context)
         titleView.text = "通知访问权限"
-        titleView.textSize = 17f // iOS标准字体大小
-        titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        titleView.textSize = 17f
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
         titleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         contentArea.addView(titleView)
         
@@ -333,7 +333,7 @@ class SettingsFragment : Fragment() {
         val arrowView = TextView(context)
         arrowView.text = "›"
         arrowView.textSize = 18f
-        arrowView.setTextColor(ContextCompat.getColor(context, R.color.ios_tertiary_label))
+        arrowView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         itemContainer.addView(arrowView)
         
         // 点击事件
@@ -346,10 +346,10 @@ class SettingsFragment : Fragment() {
             val isEnabled = PermissionHelper.isNotificationListenerEnabled(context)
             if (isEnabled) {
                 statusView.text = "已开启"
-                statusView.setTextColor(ContextCompat.getColor(context, R.color.ios_green))
+                statusView.setTextColor(ContextCompat.getColor(context, R.color.success))
             } else {
                 statusView.text = "未开启 - 点击设置"
-                statusView.setTextColor(ContextCompat.getColor(context, R.color.ios_red))
+                statusView.setTextColor(ContextCompat.getColor(context, R.color.error))
             }
         }
         
@@ -407,7 +407,7 @@ class SettingsFragment : Fragment() {
         val titleView = TextView(context)
         titleView.text = "通知发送权限"
         titleView.textSize = 17f // iOS标准字体大小
-        titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
         titleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         contentArea.addView(titleView)
         
@@ -429,7 +429,7 @@ class SettingsFragment : Fragment() {
         val arrowView = TextView(context)
         arrowView.text = "›"
         arrowView.textSize = 18f
-        arrowView.setTextColor(ContextCompat.getColor(context, R.color.ios_tertiary_label))
+        arrowView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         itemContainer.addView(arrowView)
         
         // 点击事件
@@ -442,10 +442,10 @@ class SettingsFragment : Fragment() {
             val isEnabled = PermissionHelper.hasPostNotificationPermission(context)
             if (isEnabled) {
                 statusView.text = "已开启"
-                statusView.setTextColor(ContextCompat.getColor(context, R.color.ios_green))
+                statusView.setTextColor(ContextCompat.getColor(context, R.color.success))
             } else {
                 statusView.text = "未开启 - 点击设置"
-                statusView.setTextColor(ContextCompat.getColor(context, R.color.ios_red))
+                statusView.setTextColor(ContextCompat.getColor(context, R.color.error))
             }
         }
         
@@ -501,7 +501,7 @@ class SettingsFragment : Fragment() {
         val titleView = TextView(context)
         titleView.text = title
         titleView.textSize = 17f // iOS标准字体大小
-        titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
         titleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         contentArea.addView(titleView)
         
@@ -509,7 +509,7 @@ class SettingsFragment : Fragment() {
         val subtitleView = TextView(context)
         subtitleView.text = subtitle
         subtitleView.textSize = 13f
-        subtitleView.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        subtitleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         subtitleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         val subtitleParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -526,9 +526,9 @@ class SettingsFragment : Fragment() {
         val sharedPrefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         switchView.isChecked = sharedPrefs.getBoolean(prefKey, defaultValue)
         
-        // iOS风格的开关颜色
+        // 开关颜色
         switchView.thumbTintList = ContextCompat.getColorStateList(context, R.color.white)
-        switchView.trackTintList = ContextCompat.getColorStateList(context, R.color.ios_blue)
+        switchView.trackTintList = ContextCompat.getColorStateList(context, R.color.primary)
         
         switchView.setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit().putBoolean(prefKey, isChecked).apply()
@@ -554,7 +554,7 @@ class SettingsFragment : Fragment() {
         val itemContainer = LinearLayout(context)
         itemContainer.orientation = LinearLayout.HORIZONTAL
         itemContainer.gravity = Gravity.CENTER_VERTICAL
-        itemContainer.setPadding(20, 12, 20, 12) // iOS标准内边距
+        itemContainer.setPadding(20, 12, 20, 12)
         itemContainer.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -588,8 +588,8 @@ class SettingsFragment : Fragment() {
         // 主标题
         val titleView = TextView(context)
         titleView.text = title
-        titleView.textSize = 17f // iOS标准字体大小
-        titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        titleView.textSize = 17f
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
         titleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         contentArea.addView(titleView)
         
@@ -597,7 +597,7 @@ class SettingsFragment : Fragment() {
         val subtitleView = TextView(context)
         subtitleView.text = subtitle
         subtitleView.textSize = 13f
-        subtitleView.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        subtitleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         subtitleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         val subtitleParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -613,7 +613,7 @@ class SettingsFragment : Fragment() {
         val arrowView = TextView(context)
         arrowView.text = "›"
         arrowView.textSize = 18f
-        arrowView.setTextColor(ContextCompat.getColor(context, R.color.ios_tertiary_label))
+        arrowView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         itemContainer.addView(arrowView)
         
         // 点击事件
@@ -637,7 +637,7 @@ class SettingsFragment : Fragment() {
         val itemContainer = LinearLayout(context)
         itemContainer.orientation = LinearLayout.HORIZONTAL
         itemContainer.gravity = Gravity.CENTER_VERTICAL
-        itemContainer.setPadding(20, 12, 20, 12) // iOS标准内边距
+        itemContainer.setPadding(20, 12, 20, 12)
         itemContainer.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -658,8 +658,8 @@ class SettingsFragment : Fragment() {
         // 标题
         val titleView = TextView(context)
         titleView.text = title
-        titleView.textSize = 17f // iOS标准字体大小
-        titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        titleView.textSize = 17f
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
         titleView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         val titleParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         titleView.layoutParams = titleParams
@@ -669,7 +669,7 @@ class SettingsFragment : Fragment() {
         val valueView = TextView(context)
         valueView.text = value
         valueView.textSize = 17f
-        valueView.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        valueView.setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
         valueView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         valueView.gravity = Gravity.END
         itemContainer.addView(valueView)
@@ -690,8 +690,8 @@ class SettingsFragment : Fragment() {
         )
         separatorParams.leftMargin = 56 // 对齐内容区域
         separator.layoutParams = separatorParams
-        separator.setBackgroundColor(ContextCompat.getColor(context, R.color.ios_separator))
-        separator.alpha = 0.3f // iOS分隔线透明度
+        separator.setBackgroundColor(ContextCompat.getColor(context, R.color.outline_variant))
+        separator.alpha = 0.3f
         
         return separator
     }
@@ -770,7 +770,7 @@ class SettingsFragment : Fragment() {
                 // 显示成功消息
                 AlertDialog.Builder(requireContext())
                     .setTitle("清理完成")
-                    .setMessage("已成功清理7天前的数据")
+                    .setMessage("已成功清理7天前的通知")
                     .setPositiveButton("确定", null)
                     .show()
             } catch (e: Exception) {

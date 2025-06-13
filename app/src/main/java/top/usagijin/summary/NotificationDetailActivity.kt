@@ -74,7 +74,7 @@ class NotificationDetailActivity : AppCompatActivity() {
                 CoordinatorLayout.LayoutParams.MATCH_PARENT,
                 CoordinatorLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary_blue))
+            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary))
         }
         
         // 创建Toolbar
@@ -83,7 +83,7 @@ class NotificationDetailActivity : AppCompatActivity() {
                 AppBarLayout.LayoutParams.MATCH_PARENT,
                 AppBarLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary_blue))
+            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary))
             setTitleTextColor(Color.WHITE)
         }
         appBarLayout.addView(toolbar)
@@ -130,7 +130,7 @@ class NotificationDetailActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 8
             )
-            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary_blue))
+            setBackgroundColor(ContextCompat.getColor(this@NotificationDetailActivity, R.color.primary))
         }
         parent.addView(colorBar)
         

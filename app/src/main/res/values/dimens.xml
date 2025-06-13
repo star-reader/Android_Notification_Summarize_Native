@@ -24,4 +24,94 @@
     <dimen name="text_size_medium">16sp</dimen>
     <dimen name="text_size_small">14sp</dimen>
     <dimen name="text_size_caption">12sp</dimen>
+    
+    <!-- Material Design 3 Spacing System -->
+    
+    <!-- Base spacing unit (4dp) -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">12dp</dimen>
+    <dimen name="spacing_lg">16dp</dimen>
+    <dimen name="spacing_xl">20dp</dimen>
+    <dimen name="spacing_xxl">24dp</dimen>
+    <dimen name="spacing_xxxl">32dp</dimen>
+    
+    <!-- Card spacing -->
+    <dimen name="card_spacing">8dp</dimen>
+    <dimen name="card_margin">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    
+    <!-- Corner radius -->
+    <dimen name="corner_radius_xs">4dp</dimen>
+    <dimen name="corner_radius_sm">8dp</dimen>
+    <dimen name="corner_radius_md">12dp</dimen>
+    <dimen name="corner_radius_lg">16dp</dimen>
+    <dimen name="corner_radius_xl">20dp</dimen>
+    <dimen name="corner_radius_xxl">24dp</dimen>
+    <dimen name="corner_radius_xxxl">28dp</dimen>
+    
+    <!-- Elevation -->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_xs">1dp</dimen>
+    <dimen name="elevation_sm">2dp</dimen>
+    <dimen name="elevation_md">4dp</dimen>
+    <dimen name="elevation_lg">6dp</dimen>
+    <dimen name="elevation_xl">8dp</dimen>
+    <dimen name="elevation_xxl">12dp</dimen>
+    
+    <!-- Icon sizes -->
+    <dimen name="icon_size_xs">16dp</dimen>
+    <dimen name="icon_size_sm">20dp</dimen>
+    <dimen name="icon_size_md">24dp</dimen>
+    <dimen name="icon_size_lg">32dp</dimen>
+    <dimen name="icon_size_xl">40dp</dimen>
+    <dimen name="icon_size_xxl">48dp</dimen>
+    <dimen name="icon_size_xxxl">56dp</dimen>
+    
+    <!-- Button dimensions -->
+    <dimen name="button_height_sm">32dp</dimen>
+    <dimen name="button_height_md">40dp</dimen>
+    <dimen name="button_height_lg">48dp</dimen>
+    <dimen name="button_min_width">64dp</dimen>
+    
+    <!-- Text sizes -->
+    <dimen name="text_size_body">14sp</dimen>
+    <dimen name="text_size_title">16sp</dimen>
+    <dimen name="text_size_headline">20sp</dimen>
+    <dimen name="text_size_display">24sp</dimen>
+    
+    <!-- List item dimensions -->
+    <dimen name="list_item_height_sm">48dp</dimen>
+    <dimen name="list_item_height_md">56dp</dimen>
+    <dimen name="list_item_height_lg">64dp</dimen>
+    <dimen name="list_item_height_xl">72dp</dimen>
+    
+    <!-- App bar dimensions -->
+    <dimen name="app_bar_height">56dp</dimen>
+    <dimen name="toolbar_height">56dp</dimen>
+    
+    <!-- Divider -->
+    <dimen name="divider_height">1dp</dimen>
+    
+    <!-- Stroke width -->
+    <dimen name="stroke_width_thin">0.5dp</dimen>
+    <dimen name="stroke_width_normal">1dp</dimen>
+    <dimen name="stroke_width_thick">2dp</dimen>
+    
+    <!-- Screen margins -->
+    <dimen name="screen_margin_horizontal">16dp</dimen>
+    <dimen name="screen_margin_vertical">16dp</dimen>
+    
+    <!-- Content margins -->
+    <dimen name="content_margin_sm">8dp</dimen>
+    <dimen name="content_margin_md">16dp</dimen>
+    <dimen name="content_margin_lg">24dp</dimen>
+    
+    <!-- Minimum touch target -->
+    <dimen name="min_touch_target">48dp</dimen>
+    
+    <!-- FAB dimensions -->
+    <dimen name="fab_size_normal">56dp</dimen>
+    <dimen name="fab_size_mini">40dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
 </resources> 

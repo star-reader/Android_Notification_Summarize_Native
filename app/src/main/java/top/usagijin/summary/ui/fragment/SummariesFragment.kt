@@ -76,8 +76,7 @@ class SummariesFragment : Fragment() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        // iOS风格的分组背景色
-        rootLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.ios_system_grouped_background))
+        rootLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.background))
         
         // 创建滚动视图
         val scrollView = ScrollView(context)
@@ -85,7 +84,6 @@ class SummariesFragment : Fragment() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT
         )
-        // iOS风格的边距
         scrollView.setPadding(16, 16, 16, 16)
         scrollView.isVerticalScrollBarEnabled = false
         scrollView.overScrollMode = View.OVER_SCROLL_NEVER
@@ -114,12 +112,12 @@ class SummariesFragment : Fragment() {
         errorLayout.orientation = LinearLayout.VERTICAL
         errorLayout.gravity = Gravity.CENTER
         errorLayout.setPadding(32, 32, 32, 32)
-        errorLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.ios_system_grouped_background))
+        errorLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.background))
         
         val errorText = TextView(context)
         errorText.text = "⚠️ 加载摘要时出错"
-        errorText.textSize = 17f // iOS标准字体大小
-        errorText.setTextColor(ContextCompat.getColor(context, R.color.ios_red))
+        errorText.textSize = 17f
+        errorText.setTextColor(ContextCompat.getColor(context, R.color.error))
         errorText.gravity = Gravity.CENTER
         errorText.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         
@@ -196,7 +194,7 @@ class SummariesFragment : Fragment() {
         )
         card.radius = 16f // iOS风格的大圆角
         card.cardElevation = 0f // iOS不使用阴影
-        card.setCardBackgroundColor(ContextCompat.getColor(context, R.color.ios_secondary_system_grouped_background))
+        card.setCardBackgroundColor(ContextCompat.getColor(context, R.color.secondary_system_grouped_background))
         card.strokeWidth = 0
         
         // 添加点击效果
@@ -264,7 +262,7 @@ class SummariesFragment : Fragment() {
             appIcon.setImageDrawable(icon)
         } catch (e: Exception) {
             appIcon.setImageResource(R.drawable.ic_summarize)
-            appIcon.imageTintList = ContextCompat.getColorStateList(context, R.color.ios_gray)
+            appIcon.imageTintList = ContextCompat.getColorStateList(context, R.color.gray)
         }
         
         // iOS风格的圆角图标
@@ -280,7 +278,7 @@ class SummariesFragment : Fragment() {
         val appNameView = TextView(context)
         appNameView.text = summary.appName
         appNameView.textSize = 15f // iOS标准字体大小
-        appNameView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        appNameView.setTextColor(ContextCompat.getColor(context, R.color.label))
         appNameView.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         appNameView.maxLines = 1
         appNameView.ellipsize = android.text.TextUtils.TruncateAt.END
@@ -370,7 +368,7 @@ class SummariesFragment : Fragment() {
             val titleView = TextView(context)
             titleView.text = summary.title
             titleView.textSize = 17f // iOS标题字体大小
-            titleView.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+            titleView.setTextColor(ContextCompat.getColor(context, R.color.label))
             titleView.typeface = Typeface.create("sans-serif", Typeface.BOLD)
             titleView.setLineSpacing(0f, 1.2f)
             titleView.maxLines = 2
@@ -388,7 +386,7 @@ class SummariesFragment : Fragment() {
         val summaryView = TextView(context)
         summaryView.text = summary.summary
         summaryView.textSize = 15f // iOS正文字体大小
-        summaryView.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        summaryView.setTextColor(ContextCompat.getColor(context, R.color.secondary_label))
         summaryView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         summaryView.setLineSpacing(0f, 1.3f) // iOS行间距
         summaryView.maxLines = 4
@@ -412,7 +410,7 @@ class SummariesFragment : Fragment() {
         val timeView = TextView(context)
         timeView.text = formatiOSTime(summary.time)
         timeView.textSize = 13f // iOS时间字体大小
-        timeView.setTextColor(ContextCompat.getColor(context, R.color.ios_tertiary_label))
+        timeView.setTextColor(ContextCompat.getColor(context, R.color.tertiary_label))
         timeView.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         val timeParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         timeView.layoutParams = timeParams
@@ -422,7 +420,7 @@ class SummariesFragment : Fragment() {
         val moreButton = TextView(context)
         moreButton.text = "···"
         moreButton.textSize = 16f
-        moreButton.setTextColor(ContextCompat.getColor(context, R.color.ios_tertiary_label))
+        moreButton.setTextColor(ContextCompat.getColor(context, R.color.tertiary_label))
         moreButton.gravity = Gravity.CENTER
         moreButton.setPadding(8, 4, 8, 4)
         
@@ -527,7 +525,7 @@ class SummariesFragment : Fragment() {
         val emptyTitle = TextView(context)
         emptyTitle.text = "无摘要"
         emptyTitle.textSize = 22f // iOS大标题字体
-        emptyTitle.setTextColor(ContextCompat.getColor(context, R.color.ios_label))
+        emptyTitle.setTextColor(ContextCompat.getColor(context, R.color.label))
         emptyTitle.typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
         emptyTitle.gravity = Gravity.CENTER
         val titleParams = LinearLayout.LayoutParams(
@@ -542,7 +540,7 @@ class SummariesFragment : Fragment() {
         val hintText = TextView(context)
         hintText.text = "当通知被汇总后，摘要会显示在这里"
         hintText.textSize = 15f
-        hintText.setTextColor(ContextCompat.getColor(context, R.color.ios_secondary_label))
+        hintText.setTextColor(ContextCompat.getColor(context, R.color.secondary_label))
         hintText.gravity = Gravity.CENTER
         hintText.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         emptyContainer.addView(hintText)

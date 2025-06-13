@@ -233,7 +233,7 @@ object NotificationSenderService {
             .setContentTitle("智能摘要")
             .setContentText("收到 ${summaries.size} 条新摘要")
             .setStyle(inboxStyle)
-            .setColor(ContextCompat.getColor(context, R.color.primary_blue))
+                            .setColor(ContextCompat.getColor(context, R.color.primary))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

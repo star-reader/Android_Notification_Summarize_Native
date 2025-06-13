@@ -74,7 +74,7 @@ class SettingsActivity : AppCompatActivity() {
                 CoordinatorLayout.LayoutParams.MATCH_PARENT,
                 CoordinatorLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.primary_blue))
+            setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.primary))
         }
         
         // 创建Toolbar
@@ -83,7 +83,7 @@ class SettingsActivity : AppCompatActivity() {
                 AppBarLayout.LayoutParams.MATCH_PARENT,
                 AppBarLayout.LayoutParams.WRAP_CONTENT
             )
-            setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.primary_blue))
+            setBackgroundColor(ContextCompat.getColor(this@SettingsActivity, R.color.primary))
             setTitleTextColor(Color.WHITE)
         }
         appBarLayout.addView(toolbar)
@@ -411,12 +411,12 @@ class SettingsActivity : AppCompatActivity() {
      */
     private fun showColorPickerDialog(packageName: String, appName: String) {
         val colors = arrayOf(
-            "蓝色" to R.color.primary_blue,
-            "绿色" to R.color.wechat_green,
+            "蓝色" to R.color.primary,
+            "绿色" to R.color.importance_low,
             "橙色" to R.color.importance_medium,
             "红色" to R.color.importance_high,
             "紫色" to R.color.purple_500,
-            "青色" to R.color.twitter_cyan
+            "青色" to R.color.secondary
         )
         
         val colorNames = colors.map { it.first }.toTypedArray()

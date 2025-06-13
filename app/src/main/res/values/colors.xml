@@ -117,10 +117,24 @@
     <color name="importance_low">#2E7D32</color>
     
     <!-- Status Colors -->
+    <color name="success">#2E7D32</color>
     <color name="status_success">#2E7D32</color>
     <color name="status_warning">#FF8F00</color>
     <color name="status_error">#BA1A1A</color>
     <color name="status_warning_background">#FFF3E0</color>
+    
+    <!-- Surface Variants -->
+    <color name="surface_variant">#E7E0EC</color>
+    <color name="secondary_system_grouped_background">#F2F2F7</color>
+    
+    <!-- Label Colors -->
+    <color name="label">#1C1B1F</color>
+    <color name="secondary_label">#49454F</color>
+    <color name="tertiary_label">#79747E</color>
+    
+    <!-- Other Colors -->
+    <color name="gray">#9E9E9E</color>
+    <color name="card_stroke">#CAC4D0</color>
     
     <!-- Bottom Navigation -->
     <color name="bottom_nav_selected">#6750A4</color>

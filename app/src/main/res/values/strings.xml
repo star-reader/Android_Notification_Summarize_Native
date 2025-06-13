@@ -23,10 +23,6 @@
     <string name="no_summaries">暂无摘要</string>
     <string name="no_summaries_description">当通知被汇总后，摘要会显示在这里</string>
     
-    <!-- 排序 -->
-    <string name="sort_by_time">按时间排序</string>
-    <string name="sort_by_app">按应用排序</string>
-    
     <!-- 通知详情 -->
     <string name="notification_details">通知详情</string>
     <string name="summary_details">摘要详情</string>
