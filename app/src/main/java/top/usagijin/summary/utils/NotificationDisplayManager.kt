@@ -102,13 +102,19 @@ class NotificationDisplayManager private constructor(private val context: Contex
      */
     fun showSummaryNotification(summary: SummaryData) {
         try {
+            Log.d(TAG, "showSummaryNotification called with: ${summary.title}, importance: ${summary.importanceLevel}")
+            
             val channelId = getChannelIdByImportance(summary.importanceLevel)
             val color = getAppColor(summary.packageName)
             
+            Log.d(TAG, "Using channel: $channelId, color: $color")
+            
             // 5级优先通知：独立显示，常驻
             if (summary.importanceLevel == 5) {
+                Log.d(TAG, "Displaying prior notification (level 5)")
                 displayPriorNotification(summary, channelId, color)
             } else {
+                Log.d(TAG, "Displaying common notification (level ${summary.importanceLevel})")
                 // 1-4级普通通知：按应用合并，替换之前的通知
                 displayCommonNotification(summary, channelId, color)
             }
@@ -141,7 +147,7 @@ class NotificationDisplayManager private constructor(private val context: Contex
         )
         
         // 使用纯文本摘要
-        val summaryText = summary.summary
+        val summaryText = "【优先通知】${summary.summary}"
         
         // 构建优先通知
         val notification = NotificationCompat.Builder(context, channelId)
@@ -303,8 +309,8 @@ class NotificationDisplayManager private constructor(private val context: Contex
             5 -> NotificationCompat.PRIORITY_HIGH // 5级：高优先级
             4 -> NotificationCompat.PRIORITY_DEFAULT // 4级：默认优先级
             3 -> NotificationCompat.PRIORITY_DEFAULT // 3级：默认优先级
-            2 -> NotificationCompat.PRIORITY_LOW // 2级：低优先级
-            else -> NotificationCompat.PRIORITY_MIN // 1级：最低优先级
+            2 -> NotificationCompat.PRIORITY_DEFAULT // 2级：低优先级
+            else -> NotificationCompat.PRIORITY_DEFAULT // 1级：最低优先级
         }
     }
     

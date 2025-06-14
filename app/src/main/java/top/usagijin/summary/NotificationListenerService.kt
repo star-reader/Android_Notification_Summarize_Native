@@ -114,6 +114,12 @@ class NotificationListenerService : NotificationListenerService() {
                 return
             }
 
+            // 忽略音乐软件的播放通知，还要设备互联等
+            if (shouldIgnoreNotification(notificationData)) {
+                Log.d(TAG, "Ignoring filtered notification from ${notificationData.packageName}: ${notificationData.title}")
+                return
+            }
+
             Log.i(TAG, "Received notification from ${notificationData.appName}: ${notificationData.title}")
             
             // 保存通知到数据库
@@ -478,5 +484,94 @@ class NotificationListenerService : NotificationListenerService() {
         val currentCounts = _notificationCounts.value.toMutableMap()
         currentCounts.remove(packageName)
         _notificationCounts.value = currentCounts
+    }
+    
+    /**
+     * 判断是否应该忽略该通知
+     */
+    private fun shouldIgnoreNotification(notification: NotificationData.Standard): Boolean {
+        val packageName = notification.packageName
+        val title = notification.title?.toLowerCase() ?: ""
+        val content = notification.content?.toLowerCase() ?: ""
+        
+        // 1. 忽略音乐播放器通知
+        // val musicPackages = setOf(
+        //     "com.netease.cloudmusic",      // 网易云音乐
+        //     "com.kugou.android",           // 酷狗音乐
+        //     "cn.kuwo.player",              // 酷我音乐
+        //     "com.tencent.qqmusic",         // QQ音乐
+        //     "com.miui.player",             // 小米音乐
+        //     "com.android.music",           // 系统音乐
+        //     "com.google.android.music",    // Google Play Music
+        //     "com.spotify.music",           // Spotify
+        //     "com.apple.android.music",     // Apple Music
+        //     "com.soundcloud.android",      // SoundCloud
+        //     "deezer.android.app",          // Deezer
+        //     "com.aspiro.tidal",            // TIDAL
+        //     "com.clearchannel.iheartradio.controller", // iHeartRadio
+        //     "com.pandora.android",         // Pandora
+        //     "com.amazon.mp3",              // Amazon Music
+        //     "com.microsoft.xboxone.smartglass", // Xbox Music
+        //     "com.sec.android.app.music",   // 三星音乐
+        //     "com.htc.music",               // HTC音乐
+        //     "com.sonyericsson.music",      // 索尼音乐
+        //     "com.lge.music",               // LG音乐
+        //     "com.oppo.music",              // OPPO音乐
+        //     "com.vivo.music",              // vivo音乐
+        //     "com.huawei.music",            // 华为音乐
+        //     "com.meizu.media.music"        // 魅族音乐
+        // )
+        
+        // if (packageName in musicPackages) {
+        //     return true
+        // }
+        
+        // 2. 忽略音乐播放相关的通知内容
+        val musicKeywords = setOf(
+            "正在播放", "now playing", "playing", "paused", "暂停",
+            "上一首", "下一首", "previous", "next", "skip",
+            "音乐", "music", "song", "歌曲", "专辑", "album",
+            "艺术家", "artist", "播放器", "player"
+        )
+        
+        if (musicKeywords.any { keyword -> title.contains(keyword) || content.contains(keyword) }) {
+            return true
+        }
+        
+        // 3. 忽略系统设备互联通知
+        val systemPackages = setOf(
+            "com.android.systemui",        // 系统UI
+            "com.android.system",          // 系统
+            "com.miui.mishare.connectivity", // 小米互传
+            "com.huawei.nearby",           // 华为畅连
+            "com.oppo.nearlink",           // OPPO互联
+            "com.vivo.easyshare",          // vivo互传
+            "com.samsung.android.beaconmanager", // 三星设备连接
+            "com.google.android.gms",      // Google服务
+            "com.android.bluetooth",       // 蓝牙
+            "com.android.wifi.resources",  // WiFi
+            "com.android.settings",        // 设置
+            "com.miui.securitycenter",     // 小米安全中心
+            "com.huawei.systemmanager",    // 华为手机管家
+            "com.coloros.safecenter",      // ColorOS安全中心
+            "com.vivo.abe"                 // vivo系统管理
+        )
+        
+        if (packageName in systemPackages) {
+            return true
+        }
+        
+        // 7. 忽略空内容或过短的通知
+        val totalLength = (notification.title?.length ?: 0) + (notification.content?.length ?: 0)
+        if (totalLength < 3) {
+            return true
+        }
+        
+        // 8. 忽略持续性通知（如下载进度、播放状态等）
+        if (notification.isOngoing) {
+            return true
+        }
+        
+        return false
     }
 }
