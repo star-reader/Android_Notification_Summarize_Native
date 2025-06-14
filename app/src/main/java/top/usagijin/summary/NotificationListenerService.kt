@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import top.usagijin.summary.api.ApiService
 import top.usagijin.summary.data.NotificationData
+import top.usagijin.summary.data.SummaryData
 import top.usagijin.summary.repository.NotificationRepository
 import top.usagijin.summary.utils.NotificationDisplayManager
 import java.text.SimpleDateFormat
@@ -47,90 +48,14 @@ class NotificationListenerService : NotificationListenerService() {
     // 待处理任务（包名 -> Job）
     private val pendingJobs = ConcurrentHashMap<String, Job>()
     
-    // 违禁词集合 - 一般违禁词
-    private val bannedWords = setOf(
-        // 政治敏感词
-        "政治", "政府", "领导人", "总统", "主席", "总理", "党", "政党", "选举", "投票", "政策",
-        "政治制度", "民主", "专制", "独裁", "政变", "革命", "抗议", "示威", "游行", "罢工",
-        
-        // 暴力恐怖词汇
-        "暴力", "恐怖", "炸弹", "爆炸", "枪支", "武器", "杀害", "谋杀", "恐怖主义", "恐怖分子",
-        "暴徒", "袭击", "攻击", "刺杀", "绑架", "劫持", "威胁", "恐吓",
-        
-        // 色情违法词汇
-        "色情", "裸体", "性爱", "成人", "淫秽", "猥亵", "性交", "做爱", "性器官",
-        "卖淫", "嫖娼", "性服务", "援交", "包养", "一夜情", "约炮",
-        
-        // 毒品相关
-        "毒品", "吸毒", "贩毒", "毒贩", "海洛因", "可卡因", "冰毒", "摇头丸", "大麻", "鸦片",
-        "吗啡", "芬太尼", "K粉", "麻古", "毒针", "注射器",
-        
-        // 赌博相关
-        "赌博", "赌场", "赌注", "下注", "押注", "博彩", "彩票", "六合彩", "赌球", "赌马",
-        "老虎机", "轮盘", "德州扑克", "百家乐", "21点", "麻将赌博", "网络赌博",
-        
-        // 诈骗相关
-        "诈骗", "骗子", "骗局", "传销", "庞氏骗局", "网络诈骗", "电信诈骗", "金融诈骗",
-        "虚假广告", "假冒产品", "山寨", "盗版", "非法集资", "洗钱",
-        
-        // 仇恨言论
-        "种族歧视", "性别歧视", "宗教歧视", "仇恨", "歧视", "偏见", "侮辱", "谩骂",
-        "人身攻击", "网络暴力", "霸凌", "欺凌",
-        
-        // 其他违法行为
-        "偷盗", "抢劫", "盗窃", "走私", "逃税", "贪污", "腐败", "受贿", "行贿",
-        "伪造", "仿冒", "假证", "假币", "非法经营", "违法", "犯罪"
-    )
+    // 敏感词检测已禁用 - 保留原始通知内容
+    private val bannedWords = emptySet<String>()
     
-    // 英文违禁词
-    private val bannedWordsEnglish = setOf(
-        // Political sensitive words
-        "politics", "government", "president", "chairman", "minister", "party", "election", "vote",
-        "democracy", "dictatorship", "revolution", "protest", "demonstration", "strike",
-        
-        // Violence and terrorism
-        "violence", "terror", "bomb", "explosion", "gun", "weapon", "kill", "murder", "terrorism",
-        "terrorist", "attack", "assassination", "kidnap", "hijack", "threat",
-        
-        // Adult content
-        "porn", "pornography", "nude", "naked", "sex", "adult", "erotic", "obscene", "prostitution",
-        "escort", "hookup",
-        
-        // Drugs
-        "drug", "drugs", "heroin", "cocaine", "marijuana", "cannabis", "opium", "morphine",
-        "fentanyl", "methamphetamine", "ecstasy", "narcotics",
-        
-        // Gambling
-        "gambling", "casino", "bet", "betting", "lottery", "poker", "blackjack", "roulette",
-        "slot machine", "online gambling",
-        
-        // Fraud
-        "fraud", "scam", "ponzi", "pyramid scheme", "fake", "counterfeit", "money laundering",
-        
-        // Hate speech
-        "racism", "sexism", "discrimination", "hate", "insult", "abuse", "bullying", "harassment",
-        
-        // Other illegal activities
-        "theft", "robbery", "smuggling", "tax evasion", "corruption", "bribery", "forgery",
-        "illegal", "crime", "criminal"
-    )
+    // 英文敏感词检测已禁用
+    private val bannedWordsEnglish = emptySet<String>()
     
-    // 违禁词正则表达式模式（用于更复杂的匹配）
-    private val bannedPatterns = listOf(
-        // QQ号码模式
-        Pattern.compile("[1-9][0-9]{4,10}"),
-        // 微信号模式
-        Pattern.compile("[a-zA-Z][a-zA-Z0-9_-]{5,19}"),
-        // 银行卡号模式
-        Pattern.compile("\\d{16,19}"),
-        // 身份证号模式
-        Pattern.compile("\\d{17}[\\dXx]"),
-        // 可疑链接模式
-        Pattern.compile("(http|https)://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/\\S*)?"),
-        // 金钱诱惑模式
-        Pattern.compile("\\d+万?元?\\s*(奖金|现金|红包|收益|利润|回报)"),
-
-    )
+    // 正则表达式模式检测已禁用
+    private val bannedPatterns = emptyList<Pattern>()
     
     // 常量定义
     companion object {
@@ -200,14 +125,8 @@ class NotificationListenerService : NotificationListenerService() {
                 return
             }
 
-            // 清理敏感词内容
-            val sanitizedNotification = sanitizeNotificationContent(notificationData)
-            
-            // 如果清理后内容为空或过短，则忽略
-            if (sanitizedNotification == null) {
-                Log.d(TAG, "Notification content too short after sanitization, ignoring: ${notificationData.packageName}")
-                return
-            }
+            // 敏感词检测已禁用，直接使用原始通知内容
+            val sanitizedNotification = notificationData
 
             // 忽略音乐软件的播放通知，还要设备互联等
             if (shouldIgnoreNotification(sanitizedNotification)) {
@@ -217,7 +136,7 @@ class NotificationListenerService : NotificationListenerService() {
 
             Log.i(TAG, "Received notification from ${sanitizedNotification.appName}: ${sanitizedNotification.title}")
             
-            // 保存清理后的通知到数据库
+            // 保存原始通知到数据库
             repository.addNotification(sanitizedNotification)
             
             // 更新通知计数
@@ -232,152 +151,38 @@ class NotificationListenerService : NotificationListenerService() {
     }
     
     /**
-     * 清理通知内容中的敏感词
+     * 敏感词检测已禁用 - 直接返回原始通知内容
      */
-    private fun sanitizeNotificationContent(notification: NotificationData.Standard): NotificationData.Standard? {
-        val originalTitle = notification.title ?: ""
-        val originalContent = notification.content ?: ""
-        
-        // 清理标题和内容中的敏感词
-        val sanitizedTitle = removeBannedWords(originalTitle)
-        val sanitizedContent = removeBannedWords(originalContent)
-        
-        // 检查清理后的内容长度
-        val totalLength = sanitizedTitle.length + sanitizedContent.length
-        if (totalLength < 3) {
-            Log.d(TAG, "Content too short after sanitization: ${notification.packageName}")
-            return null
-        }
-        
-        // 如果内容有变化，记录日志
-        if (sanitizedTitle != originalTitle || sanitizedContent != originalContent) {
-            Log.i(TAG, "Sanitized notification content from ${notification.packageName}")
-        }
-        
-        return notification.copy(
-            title = sanitizedTitle.ifBlank { null },
-            content = sanitizedContent.ifBlank { null }
-        )
+    private fun sanitizeNotificationContent(notification: NotificationData.Standard): NotificationData.Standard {
+        return notification
     }
     
     /**
-     * 移除文本中的违禁词
+     * 敏感词检测已禁用 - 直接返回原始文本
      */
     private fun removeBannedWords(text: String): String {
-        if (text.isBlank()) return text
-        
-        var sanitizedText = text
-        
-        // 1. 移除中文违禁词
-        bannedWords.forEach { word ->
-            sanitizedText = sanitizedText.replace(word, "***", ignoreCase = true)
-        }
-        
-        // 2. 移除英文违禁词
-        bannedWordsEnglish.forEach { word ->
-            sanitizedText = sanitizedText.replace(word, "***", ignoreCase = true)
-        }
-        
-        // 3. 处理正则表达式模式
-        bannedPatterns.forEach { pattern ->
-            sanitizedText = pattern.matcher(sanitizedText).replaceAll("***")
-        }
-        
-        // 4. 清理可疑模式
-        sanitizedText = cleanSuspiciousPatterns(sanitizedText)
-        
-        // 5. 清理多余的星号和空格
-        sanitizedText = sanitizedText
-            .replace(Regex("\\*{4,}"), "***")  // 将4个以上的星号替换为3个
-            .replace(Regex("\\s+"), " ")       // 将多个空格替换为单个空格
-            .trim()
-        
-        return sanitizedText
+        return text
     }
     
     /**
-     * 清理可疑模式
+     * 可疑模式检测已禁用 - 直接返回原始文本
      */
     private fun cleanSuspiciousPatterns(text: String): String {
-        var cleanedText = text
-        
-        // 1. 处理手机号码模式
-        cleanedText = cleanedText.replace(Regex("1[3-9]\\d{9}"), "***")
-        
-        // 2. 处理QQ号码模式
-        cleanedText = cleanedText.replace(Regex("(?<!\\d)[1-9]\\d{4,10}(?!\\d)"), "***")
-        
-        // 3. 处理银行卡号模式
-        cleanedText = cleanedText.replace(Regex("\\d{16,19}"), "***")
-        
-        // 4. 处理身份证号模式
-        cleanedText = cleanedText.replace(Regex("\\d{17}[\\dXx]"), "***")
-        
-        // 5. 处理可疑链接
-        cleanedText = cleanedText.replace(
-            Regex("(http|https)://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/\\S*)?"), 
-            "[链接已屏蔽]"
-        )
-        
-        // 6. 处理金钱诱惑内容
-        cleanedText = cleanedText.replace(
-            Regex("\\d+万?元?\\s*(奖金|现金|红包|收益|利润|回报)"), 
-            "***"
-        )
-        
-        // 7. 处理紧急诱导内容
-        cleanedText = cleanedText.replace(
-            Regex("(紧急|急|立即|马上|速度|快速)\\s*(联系|转账|汇款|支付)"), 
-            "***"
-        )
-        
-        // 8. 处理过多特殊字符
-        if (hasExcessiveSpecialChars(cleanedText)) {
-            cleanedText = cleanedText.replace(Regex("[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?]{3,}"), "***")
-        }
-        
-        return cleanedText
+        return text
     }
     
     /**
-     * 检查是否有过多特殊字符
+     * 特殊字符检测已禁用
      */
     private fun hasExcessiveSpecialChars(text: String): Boolean {
-        val specialCharCount = text.count { it in "!@#$%^&*()_+-=[]{}|;':\",./<>?" }
-        return specialCharCount > text.length * 0.3
+        return false
     }
     
     /**
-     * 清理重复字符
+     * 重复字符清理已禁用
      */
     private fun cleanRepeatedChars(text: String): String {
-        if (text.length < 4) return text
-        
-        var cleanedText = text
-        var i = 0
-        
-        while (i < cleanedText.length - 3) {
-            val char = cleanedText[i]
-            var repeatCount = 1
-            var j = i + 1
-            
-            // 计算连续重复字符数量
-            while (j < cleanedText.length && cleanedText[j] == char) {
-                repeatCount++
-                j++
-            }
-            
-            // 如果重复超过4次，替换为3个字符
-            if (repeatCount > 4) {
-                val replacement = char.toString().repeat(3)
-                cleanedText = cleanedText.substring(0, i) + replacement + cleanedText.substring(j)
-                i += 3
-            } else {
-                i++
-            }
-        }
-        
-        return cleanedText
+        return text
     }
     
     /**
@@ -388,7 +193,7 @@ class NotificationListenerService : NotificationListenerService() {
         val title = notification.title?.toLowerCase() ?: ""
         val content = notification.content?.toLowerCase() ?: ""
         
-        // 注意：这里不再检查违禁词，因为已经在sanitizeNotificationContent中处理了
+        // 敏感词检测已完全禁用
         
         // 1. 忽略音乐播放相关的通知内容
         val musicKeywords = setOf(
@@ -698,7 +503,7 @@ class NotificationListenerService : NotificationListenerService() {
             val truncatedNotifications = truncateNotifications(notifications, scenario)
             
             // 调用API生成摘要
-            val summary = apiService.getSummary(truncatedNotifications)
+            val summary = callSummarizeApi(truncatedNotifications)
             
             if (summary != null) {
                 // 保存摘要
@@ -718,6 +523,47 @@ class NotificationListenerService : NotificationListenerService() {
             
         } catch (e: Exception) {
             Log.e(TAG, "Error generating summary", e)
+        }
+    }
+    
+    /**
+     * 调用摘要API
+     */
+    private suspend fun callSummarizeApi(notifications: List<NotificationData>): SummaryData? {
+        return try {
+            // 构建请求
+            val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val notificationInputs = notifications.map { notification ->
+                top.usagijin.summary.api.NotificationInput(
+                    title = notification.title,
+                    content = notification.content,
+                    time = notification.time,
+                    packageName = notification.packageName
+                )
+            }
+            
+            val request = top.usagijin.summary.api.SummarizeRequest(
+                currentTime = currentTime,
+                data = notificationInputs
+            )
+            
+            // 调用API
+            val response = apiService.summarize(request)
+            
+            // 转换为SummaryData
+            SummaryData(
+                id = UUID.randomUUID().toString(),
+                packageName = notifications.firstOrNull()?.packageName ?: "",
+                appName = notifications.firstOrNull()?.appName ?: "",
+                title = response.title,
+                summary = response.summary,
+                importanceLevel = response.importanceLevel,
+                time = currentTime
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "调用摘要API失败", e)
+            null
         }
     }
     
@@ -790,36 +636,30 @@ class NotificationListenerService : NotificationListenerService() {
     }
     
     /**
-     * 动态添加违禁词（可供外部调用）
+     * 敏感词管理功能已禁用
      */
     fun addBannedWord(word: String) {
-        if (word.isNotBlank()) {
-            (bannedWords as MutableSet).add(word.toLowerCase())
-            Log.i(TAG, "Added banned word: $word")
-        }
+        Log.i(TAG, "敏感词检测已禁用，忽略添加操作: $word")
     }
     
     /**
-     * 动态移除违禁词（可供外部调用）
+     * 敏感词管理功能已禁用
      */
     fun removeBannedWord(word: String) {
-        if ((bannedWords as MutableSet).remove(word.toLowerCase())) {
-            Log.i(TAG, "Removed banned word: $word")
-        }
+        Log.i(TAG, "敏感词检测已禁用，忽略移除操作: $word")
     }
     
     /**
-     * 获取当前违禁词列表
+     * 敏感词管理功能已禁用
      */
     fun getBannedWords(): Set<String> {
-        return bannedWords.toSet()
+        return emptySet()
     }
     
     /**
-     * 获取清理统计信息
+     * 敏感词统计功能已禁用
      */
     fun getSanitizationStats(): Map<String, Int> {
-        // 这里可以添加统计逻辑，记录清理的词汇数量等
         return emptyMap()
     }
 }

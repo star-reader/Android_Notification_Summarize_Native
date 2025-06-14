@@ -21,11 +21,15 @@ import top.usagijin.summary.ui.fragment.SummariesFragment
 import top.usagijin.summary.utils.PermissionHelper
 import top.usagijin.summary.service.NotificationSenderService
 import top.usagijin.summary.api.ApiService
-import top.usagijin.summary.utils.WorkManagerScheduler
 import top.usagijin.summary.utils.TestNotificationSender
+import top.usagijin.summary.utils.MemoryUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import androidx.lifecycle.lifecycleScope
+import android.widget.Button
+import top.usagijin.summary.api.NotificationInput
 
 /**
  * 主界面Activity
@@ -66,6 +70,12 @@ class MainActivity : AppCompatActivity() {
             // 默认显示通知页面
             if (savedInstanceState == null) {
                 showFragment(NotificationsFragment.newInstance())
+            }
+            
+            // 添加测试按钮
+            val testButton = findViewById<Button>(R.id.test_inference_button)
+            testButton?.setOnClickListener {
+                testInference()
             }
             
             Log.d(TAG, "MainActivity onCreate completed successfully")
@@ -192,27 +202,51 @@ class MainActivity : AppCompatActivity() {
     }
     
     /**
-     * 初始化API服务
+     * 初始化本地模型服务
      */
     private fun initializeApiService() {
-        Log.d(TAG, "Initializing API service...")
+        Log.d(TAG, "Initializing local model service...")
         
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val apiService = ApiService.getInstance(this@MainActivity)
-                val initialized = apiService.initialize()
-                
-                if (initialized) {
-                    Log.i(TAG, "API service initialized successfully")
-                    
-                    // 启动Token刷新定期任务
-                    WorkManagerScheduler.scheduleTokenRefresh(this@MainActivity)
-                } else {
-                    Log.w(TAG, "API service initialization failed")
+        val apiService = ApiService.getInstance(this)
+        
+        // 监听模型加载状态
+        lifecycleScope.launch {
+            apiService.modelState.collectLatest { state ->
+                when (state) {
+                    is ApiService.ModelState.NotLoaded -> {
+                        Log.d(TAG, "NDK模型未加载")
+                    }
+                    is ApiService.ModelState.Loading -> {
+                        Log.i(TAG, "正在加载NDK ONNX模型，请稍候...")
+                        runOnUiThread {
+                            Toast.makeText(this@MainActivity, "正在加载NDK ONNX模型，请稍候...", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    is ApiService.ModelState.Loaded -> {
+                        Log.i(TAG, "NDK ONNX模型加载成功！")
+                        runOnUiThread {
+                            Toast.makeText(this@MainActivity, "NDK ONNX模型加载成功！", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    is ApiService.ModelState.Error -> {
+                        Log.e(TAG, "NDK模型加载失败: ${state.message}")
+                        runOnUiThread {
+                            Toast.makeText(this@MainActivity, "NDK模型加载失败: ${state.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
-                
+            }
+        }
+        
+        // 异步初始化模型
+        lifecycleScope.launch {
+            try {
+                apiService.initializeModel()
             } catch (e: Exception) {
-                Log.e(TAG, "Error initializing API service", e)
+                Log.e(TAG, "Error initializing local model", e)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "模型初始化失败: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -245,6 +279,63 @@ class MainActivity : AppCompatActivity() {
             else -> R.id.nav_notifications
         }
         bottomNavigation.selectedItemId = menuItemId
+    }
+    
+    private fun testInference() {
+        lifecycleScope.launch {
+            Log.i("MainActivity", "开始测试推理功能...")
+            
+            val apiService = ApiService.getInstance(this@MainActivity)
+            
+            // 测试数据
+            val testNotifications = listOf(
+                NotificationInput(
+                    title = "工作群",
+                    content = "张三: 明天的项目会议改到下午3点，请大家准时参加。李四: 收到，我会准备好相关资料。王五: 好的，没问题。",
+                    time = "2024-06-15 14:55:00",
+                    packageName = "com.tencent.mm"
+                ),
+                NotificationInput(
+                    title = "重要邮件",
+                    content = "来自manager@company.com: 关于Q4季度总结会议安排 - 定于本周五上午10点在大会议室举行，请各部门负责人准备汇报材料，包括业绩数据和下季度计划。",
+                    time = "2024-06-15 14:56:00", 
+                    packageName = "com.google.android.gm"
+                ),
+                NotificationInput(
+                    title = "银行通知",
+                    content = "【工商银行】您的账户于12月15日14:30发生一笔转账交易，金额5000.00元，余额12345.67元。如非本人操作请及时联系客服。",
+                    time = "2024-06-15 14:57:00",
+                    packageName = "com.android.mms"
+                )
+            )
+            
+            // 逐个测试
+            testNotifications.forEachIndexed { index, notification ->
+                Log.i("MainActivity", "测试通知 ${index + 1}: ${notification.title}")
+                
+                try {
+                    val request = top.usagijin.summary.api.SummarizeRequest(
+                        currentTime = notification.time,
+                        data = listOf(notification)
+                    )
+                    val result = apiService.summarize(request)
+                    
+                    Log.i("MainActivity", "测试结果 ${index + 1}:")
+                    Log.i("MainActivity", "  标题: ${result.title}")
+                    Log.i("MainActivity", "  摘要: ${result.summary}")
+                    Log.i("MainActivity", "  重要级别: ${result.importanceLevel}")
+                    Log.i("MainActivity", "  摘要长度: ${result.summary.length} 字符")
+                    
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "测试失败 ${index + 1}: ${e.message}", e)
+                }
+                
+                // 间隔1秒
+                kotlinx.coroutines.delay(1000)
+            }
+            
+            Log.i("MainActivity", "所有测试完成！")
+        }
     }
 }
 

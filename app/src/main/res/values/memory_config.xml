@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 内存配置 -->
+    <integer name="large_heap_size">2048</integer> <!-- 2GB -->
+    <integer name="max_heap_size">3072</integer>   <!-- 3GB -->
+</resources> 

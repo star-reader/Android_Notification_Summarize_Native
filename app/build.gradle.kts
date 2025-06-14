@@ -3,11 +3,15 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
+    
 }
 
 android {
     namespace = "top.usagijin.summary"
     compileSdk = 34
+    
+    // NDK版本配置
+    ndkVersion = "27.0.12077973" // 用户系统中的NDK版本
 
     defaultConfig {
         applicationId = "top.usagijin.summary"
@@ -15,8 +19,24 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.1.0"
+        
+        dexOptions {
+            javaMaxHeapSize = "3g"
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // 启用NDK支持
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+                arguments += "-DANDROID_STL=c++_shared"
+            }
+        }
+        
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -37,6 +57,14 @@ android {
     }
     buildFeatures {
         // 移除ViewBinding，改用编程式UI
+    }
+    
+    // 配置CMake构建
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 
@@ -92,4 +120,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    // JSON处理
+    implementation("org.json:json:20231013")
 }

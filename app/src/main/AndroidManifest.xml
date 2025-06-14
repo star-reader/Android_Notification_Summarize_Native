@@ -26,6 +26,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.NotificationSummary"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
+        android:vmSafeMode="false"
+        android:extractNativeLibs="true"
         tools:targetApi="31">
         
         <!-- 主活动 -->

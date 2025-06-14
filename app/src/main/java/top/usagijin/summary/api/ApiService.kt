@@ -2,361 +2,354 @@ package top.usagijin.summary.api
 
 import android.content.Context
 import android.util.Log
-import com.google.gson.Gson
-import kotlinx.coroutines.delay
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.HttpException
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import top.usagijin.summary.data.*
-import top.usagijin.summary.private_config.ApiConfig
-import top.usagijin.summary.private_config.ApiTestConfig
-import top.usagijin.summary.utils.CryptoUtils
-import top.usagijin.summary.utils.SecureTokenStorage
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONObject
+import top.usagijin.summary.service.NativeModelLoader
+import top.usagijin.summary.utils.MemoryUtils
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
- * API服务类，提供完整的API调用功能
- * 包含Token认证、Apply ID获取和摘要生成
+ * API服务类 - 使用NDK本地ONNX模型进行通知摘要
+ * 完全重写以支持原生推理，保持相同的接口
  */
 class ApiService private constructor(private val context: Context) {
     
-    private val TAG = "ApiService"
-    
-    private val tokenStorage = SecureTokenStorage.getInstance(context)
-    private val gson = Gson()
-    
-    // 创建认证拦截器
-    private val authInterceptor = Interceptor { chain ->
-        val token = tokenStorage.getToken()
-        val requestBuilder = chain.request().newBuilder()
-        
-        if (!token.isNullOrEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer $token")
-        }
-        
-        chain.proceed(requestBuilder.build())
-    }
-    
-    // 创建OkHttp客户端
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(authInterceptor)
-        .apply {
-            if (ApiConfig.Debug.ENABLE_LOGGING) {
-                addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                })
-            }
-        }
-        .connectTimeout(ApiConfig.Timeouts.CONNECT_TIMEOUT, TimeUnit.SECONDS)
-        .readTimeout(ApiConfig.Timeouts.READ_TIMEOUT, TimeUnit.SECONDS)
-        .writeTimeout(ApiConfig.Timeouts.WRITE_TIMEOUT, TimeUnit.SECONDS)
-        .build()
-    
-    // 创建Retrofit实例
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(ApiConfig.BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-    
-    // 创建API接口实例
-    private val api = retrofit.create(SummarizeApi::class.java)
-    
     companion object {
+        private const val TAG = "ApiService"
+        
         @Volatile
         private var INSTANCE: ApiService? = null
         
-        /**
-         * 获取API服务实例（单例模式）
-         */
         fun getInstance(context: Context): ApiService {
             return INSTANCE ?: synchronized(this) {
-                val instance = ApiService(context.applicationContext)
-                INSTANCE = instance
-                instance
+                INSTANCE ?: ApiService(context.applicationContext).also { INSTANCE = it }
             }
         }
     }
     
+    // 模型状态枚举
+    sealed class ModelState {
+        object NotLoaded : ModelState()
+        object Loading : ModelState()
+        object Loaded : ModelState()
+        data class Error(val message: String) : ModelState()
+    }
+    
+    // 状态管理
+    private val _modelState = MutableStateFlow<ModelState>(ModelState.NotLoaded)
+    val modelState: StateFlow<ModelState> = _modelState.asStateFlow()
+    
+    // Native模型加载器
+    private val nativeLoader = NativeModelLoader.getInstance()
+    
+    // 注意：系统提示词现在在native_inference.cpp中定义，这里不再需要
+
     /**
-     * 刷新JWT Token
-     * @return 是否成功
+     * 初始化模型
      */
-    suspend fun refreshToken(): Boolean {
-        return try {
-            Log.d(TAG, "Refreshing JWT token...")
+    suspend fun initializeModel(): Boolean = withContext(Dispatchers.IO) {
+        if (_modelState.value is ModelState.Loaded) {
+            return@withContext true
+        }
+        
+        _modelState.value = ModelState.Loading
+        Log.i(TAG, "开始初始化NDK模型...")
+        
+        try {
+            // 1. 检查系统内存
+            val memoryInfo = MemoryUtils.getMemoryInfo(context)
+            Log.i(TAG, "系统内存信息: $memoryInfo")
             
-            val request = TokenRequest(
-                clientId = ApiConfig.CLIENT_ID,
-                clientSecret = ApiConfig.CLIENT_SECRET
-            )
+            // 2. 强制垃圾回收
+            MemoryUtils.forceGarbageCollection()
             
-            val response = api.getToken(request)
+            // 3. 使用NDK加载器初始化
+            Log.i(TAG, "使用NDK加载器初始化模型和分词器...")
+            val success = nativeLoader.initialize(context)
             
-            if (response.isSuccessful && response.body() != null) {
-                val token = response.body()!!.token
-                tokenStorage.saveToken(token)
-                Log.i(TAG, "Token refreshed successfully")
-                true
+            if (success) {
+                _modelState.value = ModelState.Loaded
+                Log.i(TAG, "✓ NDK模型初始化成功！")
+                Log.i(TAG, "词汇表大小: ${nativeLoader.getVocabularySize()}")
+                return@withContext true
             } else {
-                Log.e(TAG, "Token refresh failed: ${response.code()} ${response.message()}")
-                false
+                throw Exception("NDK模型初始化失败")
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "Token refresh error", e)
-            false
+            val errorMsg = "NDK模型初始化失败: ${e.message}"
+            Log.e(TAG, errorMsg, e)
+            _modelState.value = ModelState.Error(errorMsg)
+            return@withContext false
         }
     }
     
     /**
-     * 获取Apply ID
-     * @return Apply ID或null
+     * 摘要API - 保持原有接口，使用NDK推理
      */
-    private suspend fun getApplyId(): String? {
-        return try {
-            Log.d(TAG, "Getting apply ID...")
+    suspend fun summarize(request: SummarizeRequest): SummarizeResponse = withContext(Dispatchers.IO) {
+        // 确保模型已加载
+        if (_modelState.value !is ModelState.Loaded) {
+            if (!initializeModel()) {
+                throw Exception("模型未加载")
+            }
+        }
+        
+        Log.i(TAG, "开始NDK推理，通知数量: ${request.data.size}")
+        
+        try {
+            // 构建输入文本
+            val inputText = buildInputText(request)
+            Log.d(TAG, "输入文本长度: ${inputText.length}")
             
-            val response = api.getApplyId()
+            // 执行NDK推理
+            val jsonResult = nativeLoader.performSummarization(inputText)
             
-            if (response.isSuccessful && response.body() != null) {
-                val applyId = response.body()!!.applyId
-                Log.d(TAG, "Apply ID obtained successfully")
-                applyId
-            } else {
-                Log.e(TAG, "Get apply ID failed: ${response.code()} ${response.message()}")
-                null
+            if (jsonResult.isNullOrEmpty()) {
+                throw Exception("NDK推理返回空结果")
             }
             
-        } catch (e: HttpException) {
-            if (e.code() == 401) {
-                Log.w(TAG, "Token expired, refreshing...")
-                if (refreshToken()) {
-                    // 重试获取Apply ID
-                    return getApplyId()
-                }
-            }
-            Log.e(TAG, "Get apply ID HTTP error", e)
-            null
+            // 解析JSON结果
+            val result = parseJsonResponse(jsonResult)
+            
+            Log.i(TAG, "NDK推理成功: ${result.summary}")
+            return@withContext result
+            
         } catch (e: Exception) {
-            Log.e(TAG, "Get apply ID error", e)
-            null
+            Log.e(TAG, "NDK推理失败", e)
+            
+            // 降级到规则引擎
+            Log.w(TAG, "降级到规则引擎...")
+            return@withContext fallbackToRuleEngine(request)
         }
     }
     
     /**
-     * 调用摘要API（带重试机制）
-     * @param notifications 要摘要的通知列表
-     * @return 摘要结果或null（如果失败）
+     * 构建输入文本 - 生成JSON格式供NDK解析
      */
-    suspend fun getSummary(notifications: List<NotificationData>): SummaryData? {
-        if (notifications.isEmpty()) {
-            Log.w(TAG, "Empty notifications list provided")
-            return null
-        }
-        
-        // 检查是否使用测试模式
-        if (ApiTestConfig.ENABLE_TEST_MODE && ApiTestConfig.TestMode.USE_MOCK_RESPONSES) {
-            return generateMockSummary(notifications)
-        }
-        
-        // 确保有Token
-        if (!tokenStorage.hasToken() || tokenStorage.isTokenExpired()) {
-            Log.d(TAG, "Token missing or expired, refreshing...")
-            if (!refreshToken()) {
-                Log.e(TAG, "Failed to get token, cannot proceed with summary")
-                return null
+    private fun buildInputText(request: SummarizeRequest): String {
+        try {
+            // 构建JSON格式的输入
+            val jsonObject = JSONObject()
+            jsonObject.put("currentTime", request.currentTime)
+            
+            val dataArray = org.json.JSONArray()
+            request.data.forEach { notification ->
+                val notifObj = JSONObject()
+                notifObj.put("title", notification.title ?: "")
+                notifObj.put("content", notification.content ?: "")
+                notifObj.put("time", notification.time)
+                notifObj.put("packageName", notification.packageName)
+                dataArray.put(notifObj)
             }
+            jsonObject.put("data", dataArray)
+            
+            // 不再添加systemPrompt，让native_inference.cpp使用内置的系统提示词
+            
+            val jsonString = jsonObject.toString()
+            Log.d(TAG, "构建的JSON输入: $jsonString")
+            return jsonString
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "构建JSON输入失败: ${e.message}", e)
+            // 如果JSON构建失败，返回简单的JSON格式
+            return """{"currentTime":"${request.currentTime}","data":[]}"""
         }
-        
-        // 首次尝试
-        val result = attemptSummarize(notifications)
-        if (result != null) {
-            return result
-        }
-        
-        // 等待5秒后重试一次
-        Log.i(TAG, "First attempt failed, retrying after 5 seconds...")
-        delay(ApiConfig.Retry.RETRY_DELAY_MS)
-        
-        return attemptSummarize(notifications)
     }
     
     /**
-     * 尝试调用摘要API
+     * 解析JSON响应
      */
-    private suspend fun attemptSummarize(notifications: List<NotificationData>): SummaryData? {
+    private fun parseJsonResponse(jsonResult: String): SummarizeResponse {
         return try {
-            // 检查是否使用测试模式
-            if (ApiTestConfig.ENABLE_TEST_MODE && ApiTestConfig.TestMode.USE_MOCK_RESPONSES) {
-                return generateMockSummary(notifications)
-            }
-            
-            // 获取Apply ID
-            val applyId = getApplyId()
-            if (applyId == null) {
-                Log.e(TAG, "Failed to get apply ID")
-                return null
-            }
-            
-            // 准备通知数据
-            val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val notificationDataWrapper = NotificationDataWrapper(
-                currentTime = currentTime,
-                data = notifications.map { notification ->
-                    NotificationApiInput(
-                        title = notification.title,
-                        content = notification.content?.take(1000), // 限制长度
-                        time = notification.time,
-                        packageName = notification.packageName
-                    )
-                }
+            val jsonObject = JSONObject(jsonResult)
+            SummarizeResponse(
+                title = jsonObject.optString("title", "通知摘要"),
+                summary = jsonObject.optString("summary", "收到新通知"),
+                importanceLevel = jsonObject.optInt("importanceLevel", 2)
             )
-            
-            // 计算验证哈希
-            val dataJson = gson.toJson(notificationDataWrapper)
-            val verify = CryptoUtils.computeSHA256(dataJson)
-            
-            // 添加调试日志
-            Log.d(TAG, "NotificationDataWrapper JSON: $dataJson")
-            Log.d(TAG, "SHA256 verify hash: $verify")
-            
-            // 构建请求
-            val request = SummarizeApiRequest(
-                data = notificationDataWrapper,
-                applyId = applyId,
-                verify = verify
+        } catch (e: Exception) {
+            Log.e(TAG, "JSON解析失败: $jsonResult", e)
+            // 返回默认响应
+            SummarizeResponse(
+                title = "通知摘要",
+                summary = "收到新通知",
+                importanceLevel = 2
             )
-            
-            Log.d(TAG, "Calling generate summary API...")
-            Log.d(TAG, "Request applyId: $applyId")
-            Log.d(TAG, "Full request JSON: ${gson.toJson(request)}")
-            
-            // 调用API
-            val response = api.generateSummary(request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                val apiResponse = response.body()!!
-                
-                Log.i(TAG, "API call successful: ${apiResponse.title}")
-                
-                // 生成摘要ID
-                val summaryId = "${notifications.first().packageName}_summary_${System.currentTimeMillis()}"
-                
-                SummaryData(
-                    id = summaryId,
-                    packageName = notifications.first().packageName,
-                    appName = notifications.first().appName,
-                    title = apiResponse.title,
-                    summary = apiResponse.summary,
-                    importanceLevel = apiResponse.importanceLevel,
-                    time = currentTime
+        }
+    }
+    
+    /**
+     * 降级到规则引擎（当NDK推理失败时）
+     */
+    private fun fallbackToRuleEngine(request: SummarizeRequest): SummarizeResponse {
+        Log.i(TAG, "使用规则引擎生成摘要...")
+        
+        val notifications = request.data
+        
+        return when {
+            notifications.isEmpty() -> {
+                SummarizeResponse("通知摘要", "收到新通知", 2)
+            }
+            notifications.size == 1 -> {
+                generateSingleNotificationSummary(notifications[0])
+            }
+            else -> {
+                generateMultipleNotificationsSummary(notifications)
+            }
+        }
+    }
+    
+    /**
+     * 生成单个通知摘要
+     */
+    private fun generateSingleNotificationSummary(notification: NotificationInput): SummarizeResponse {
+        val appName = getAppNameFromPackage(notification.packageName)
+        val content = notification.content ?: notification.title ?: "新通知"
+        
+        return when {
+            notification.packageName.contains("tencent.mm") -> {
+                SummarizeResponse(
+                    title = "微信消息",
+                    summary = if (content.length > 100) "${content.take(97)}..." else content,
+                    importanceLevel = if (content.contains("@") || content.contains("紧急")) 5 else 3
                 )
-            } else {
-                Log.e(TAG, "Generate summary failed: ${response.code()} ${response.message()}")
-                null
             }
-            
-        } catch (e: HttpException) {
-            when (e.code()) {
-                401 -> {
-                    Log.w(TAG, "Token expired during summary generation")
-                    if (refreshToken()) {
-                        Log.d(TAG, "Token refreshed, retrying summary generation...")
-                        return attemptSummarize(notifications)
-                    }
-                }
-                400 -> {
-                    Log.e(TAG, "Bad request - invalid applyId or verify")
-                }
+            notification.packageName.contains("tencent.mobileqq") -> {
+                SummarizeResponse(
+                    title = "QQ消息",
+                    summary = if (content.length > 100) "${content.take(97)}..." else content,
+                    importanceLevel = 3
+                )
             }
-            Log.e(TAG, "HTTP error during summary generation", e)
-            null
-        } catch (e: Exception) {
-            Log.e(TAG, "Summary generation error", e)
-            null
+            notification.packageName.contains("mail") || notification.packageName.contains("gmail") -> {
+                SummarizeResponse(
+                    title = "邮件通知",
+                    summary = "收到新邮件: ${if (content.length > 80) "${content.take(77)}..." else content}",
+                    importanceLevel = 4
+                )
+            }
+            notification.packageName.contains("sms") -> {
+                SummarizeResponse(
+                    title = "短信通知",
+                    summary = if (content.length > 100) "${content.take(97)}..." else content,
+                    importanceLevel = 4
+                )
+            }
+            else -> {
+                SummarizeResponse(
+                    title = "${appName}通知",
+                    summary = if (content.length > 100) "${content.take(97)}..." else content,
+                    importanceLevel = 2
+                )
+            }
         }
     }
     
     /**
-     * 初始化API服务
-     * 在应用启动时调用，确保有有效的Token
+     * 生成多个通知摘要
      */
-    suspend fun initialize(): Boolean {
-        return try {
-            Log.d(TAG, "Initializing API service...")
+    private fun generateMultipleNotificationsSummary(notifications: List<NotificationInput>): SummarizeResponse {
+        val appGroups = notifications.groupBy { it.packageName }
+        
+        return if (appGroups.size == 1) {
+            // 同一应用的多个通知
+            val packageName = appGroups.keys.first()
+            val appName = getAppNameFromPackage(packageName)
+            val count = notifications.size
             
-            // 检查是否使用测试模式
-            if (ApiTestConfig.ENABLE_TEST_MODE && ApiTestConfig.TestMode.USE_MOCK_RESPONSES) {
-                Log.i(TAG, "Test mode enabled, using mock token")
-                tokenStorage.saveToken(ApiTestConfig.TestMode.MOCK_TOKEN)
-                return true
-            }
-            
-            if (!tokenStorage.hasToken() || tokenStorage.isTokenExpired()) {
-                Log.d(TAG, "No valid token found, getting new token...")
-                refreshToken()
-            } else {
-                Log.d(TAG, "Valid token found")
-                true
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "API service initialization failed", e)
-            false
-        }
-    }
-    
-    /**
-     * 检查API服务状态
-     */
-    fun isReady(): Boolean {
-        return tokenStorage.hasToken() && !tokenStorage.isTokenExpired()
-    }
-    
-    /**
-     * 生成模拟摘要（测试模式）
-     */
-    private suspend fun generateMockSummary(notifications: List<NotificationData>): SummaryData? {
-        return try {
-            Log.d(TAG, "Generating mock summary for testing...")
-            
-            // 模拟网络延迟
-            delay(ApiTestConfig.TestMode.MOCK_NETWORK_DELAY)
-            
-            // 模拟API失败
-            if (ApiTestConfig.shouldMockFailure()) {
-                Log.w(TAG, "Simulating API failure for testing")
-                return null
-            }
-            
-            val packageName = notifications.first().packageName
-            val mockResponse = ApiTestConfig.getMockSummaryResponse(packageName)
-            
-            // 生成摘要ID
-            val summaryId = "${packageName}_mock_${System.currentTimeMillis()}"
-            val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            
-            Log.i(TAG, "Mock API call successful: ${mockResponse.title}")
-            
-            SummaryData(
-                id = summaryId,
-                packageName = packageName,
-                appName = notifications.first().appName,
-                title = mockResponse.title,
-                summary = mockResponse.summary,
-                importanceLevel = mockResponse.importanceLevel,
-                time = currentTime
+            SummarizeResponse(
+                title = "${appName}消息",
+                summary = "收到${count}条${appName}消息",
+                importanceLevel = kotlin.math.min(count, 5)
             )
+        } else {
+            // 多个应用的通知
+            val summary = appGroups.map { (pkg, notifs) ->
+                "${getAppNameFromPackage(pkg)}(${notifs.size})"
+            }.joinToString(", ")
             
-        } catch (e: Exception) {
-            Log.e(TAG, "Mock summary generation error", e)
-            null
+            SummarizeResponse(
+                title = "多条通知",
+                summary = "收到通知: $summary",
+                importanceLevel = 3
+            )
         }
     }
-} 
+    
+    /**
+     * 根据包名获取应用名称
+     */
+    private fun getAppNameFromPackage(packageName: String): String {
+        return when {
+            packageName.contains("tencent.mm") -> "微信"
+            packageName.contains("tencent.mobileqq") -> "QQ"
+            packageName.contains("gmail") -> "Gmail"
+            packageName.contains("mail") -> "邮件"
+            packageName.contains("sms") -> "短信"
+            packageName.contains("phone") -> "电话"
+            packageName.contains("calendar") -> "日历"
+            packageName.contains("clock") -> "时钟"
+            else -> {
+                try {
+                    val pm = context.packageManager
+                    val appInfo = pm.getApplicationInfo(packageName, 0)
+                    pm.getApplicationLabel(appInfo).toString()
+                } catch (e: Exception) {
+                    "应用"
+                }
+            }
+        }
+    }
+    
+    /**
+     * 检查模型是否已加载
+     */
+    fun isModelLoaded(): Boolean {
+        return _modelState.value is ModelState.Loaded && nativeLoader.isFullyInitialized()
+    }
+    
+    /**
+     * 获取模型状态
+     */
+    fun getModelState(): ModelState {
+        return _modelState.value
+    }
+    
+    /**
+     * 清理资源
+     */
+    fun cleanup() {
+        try {
+            Log.i(TAG, "清理ApiService资源...")
+            nativeLoader.cleanup()
+            _modelState.value = ModelState.NotLoaded
+            Log.d(TAG, "ApiService资源清理完成")
+        } catch (e: Exception) {
+            Log.e(TAG, "资源清理异常: ${e.message}", e)
+        }
+    }
+}
+
+// 请求和响应数据类
+data class SummarizeRequest(
+    val currentTime: String,
+    val data: List<NotificationInput>
+)
+
+data class NotificationInput(
+    val title: String?,
+    val content: String?,
+    val time: String,
+    val packageName: String
+)
+
+data class SummarizeResponse(
+    val title: String,
+    val summary: String,
+    val importanceLevel: Int
+) 
