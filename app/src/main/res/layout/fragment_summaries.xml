@@ -37,18 +37,28 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="通知列表"
+                    android:text="智能摘要"
                     android:textAppearance="?attr/textAppearanceHeadline6"
                     android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold" />
+
+                <!-- 刷新按钮 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonRefresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="刷新"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    app:icon="@drawable/ic_arrow_forward"
+                    app:iconGravity="textStart" />
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 通知列表 -->
+        <!-- 摘要列表 -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewNotifications"
+            android:id="@+id/recyclerViewSummaries"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -56,7 +66,7 @@
             android:paddingBottom="12dp"
             android:scrollbars="vertical"
             android:scrollbarStyle="outsideOverlay"
-            tools:listitem="@layout/item_notification" />
+            tools:listitem="@layout/item_summary" />
 
         <!-- 空状态卡片 -->
         <com.google.android.material.card.MaterialCardView
@@ -84,7 +94,7 @@
                     android:layout_width="72dp"
                     android:layout_height="72dp"
                     android:layout_marginBottom="20dp"
-                    android:src="@drawable/ic_notification"
+                    android:src="@drawable/ic_summarize"
                     android:tint="?attr/colorOnSurfaceVariant"
                     android:alpha="0.6" />
 
@@ -93,7 +103,7 @@
                     android:id="@+id/textEmptyState"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="暂无通知"
+                    android:text="暂无摘要"
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:textAlignment="center"
@@ -101,14 +111,54 @@
 
                 <!-- 提示按钮 -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonCheckPermission"
+                    android:id="@+id/buttonGenerateSummary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="检查权限"
+                    android:text="生成摘要"
                     style="@style/Widget.Material3.Button.OutlinedButton"
-                    app:icon="@drawable/ic_settings"
+                    app:icon="@drawable/ic_summarize"
                     app:iconGravity="textStart" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 加载状态 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardLoadingState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <!-- 加载动画 -->
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:indeterminate="true"
+                    app:indicatorColor="?attr/colorPrimary" />
+
+                <!-- 加载文本 -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="正在生成智能摘要..."
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textColor="?attr/colorOnSurface" />
 
             </LinearLayout>
 

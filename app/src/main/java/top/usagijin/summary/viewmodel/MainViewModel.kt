@@ -160,6 +160,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
+     * 手动生成摘要
+     */
+    fun generateSummaries() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                // TODO: 实现手动摘要生成逻辑
+                // 这里可以调用NotificationListenerService中的摘要生成方法
+                _errorMessage.value = "摘要生成功能正在开发中"
+            } catch (e: Exception) {
+                _errorMessage.value = "生成摘要失败: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    /**
      * 排序方式枚举 - 只保留时间排序
      */
     enum class SortBy {

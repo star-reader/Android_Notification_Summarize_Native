@@ -83,8 +83,11 @@ class NotificationAdapter(
                 val appIcon = packageManager.getApplicationIcon(packageName)
                 imageAppIcon.setImageDrawable(appIcon)
             } catch (e: PackageManager.NameNotFoundException) {
-                // 使用默认图标
-                imageAppIcon.setImageResource(R.drawable.ic_notification)
+                // 使用更合适的默认应用图标
+                imageAppIcon.setImageResource(R.drawable.ic_app_default)
+            } catch (e: Exception) {
+                // 其他异常也使用默认图标
+                imageAppIcon.setImageResource(R.drawable.ic_app_default)
             }
         }
         

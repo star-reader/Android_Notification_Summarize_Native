@@ -29,9 +29,8 @@ class NotificationDisplayManager private constructor(private val context: Contex
     
     // 通知渠道ID
     companion object {
-        private const val CHANNEL_ID_HIGH = "summary_high_priority"
-        private const val CHANNEL_ID_NORMAL = "summary_normal_priority"
-        private const val CHANNEL_ID_LOW = "summary_low_priority"
+        private const val CHANNEL_ID_COMMON = "summary_common"
+        private const val CHANNEL_ID_PRIOR = "summary_prior"
         
         // 默认颜色配置
         private val DEFAULT_COLORS = mapOf(
@@ -67,11 +66,11 @@ class NotificationDisplayManager private constructor(private val context: Contex
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channels = listOf(
                 NotificationChannel(
-                    CHANNEL_ID_HIGH,
-                    "高优先级摘要",
+                    CHANNEL_ID_PRIOR,
+                    "优先摘要通知",
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "重要通知的摘要"
+                    description = "高优先级摘要通知（5级），常驻显示"
                     enableLights(true)
                     lightColor = Color.RED
                     enableVibration(true)
@@ -79,21 +78,13 @@ class NotificationDisplayManager private constructor(private val context: Contex
                 },
                 
                 NotificationChannel(
-                    CHANNEL_ID_NORMAL,
-                    "普通摘要",
+                    CHANNEL_ID_COMMON,
+                    "普通摘要通知",
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
-                    description = "普通通知的摘要"
+                    description = "普通摘要通知（1-4级）"
                     enableLights(true)
                     lightColor = Color.BLUE
-                },
-                
-                NotificationChannel(
-                    CHANNEL_ID_LOW,
-                    "低优先级摘要",
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = "低重要性通知的摘要"
                 }
             )
             
@@ -112,57 +103,117 @@ class NotificationDisplayManager private constructor(private val context: Contex
     fun showSummaryNotification(summary: SummaryData) {
         try {
             val channelId = getChannelIdByImportance(summary.importanceLevel)
-            val notificationId = generateNotificationId(summary)
             val color = getAppColor(summary.packageName)
             
-            // 创建意图
-            val detailIntent = Intent(context, NotificationDetailActivity::class.java).apply {
-                putExtra("summary_id", summary.id)
-                putExtra("package_name", summary.packageName)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // 5级优先通知：独立显示，常驻
+            if (summary.importanceLevel == 5) {
+                displayPriorNotification(summary, channelId, color)
+            } else {
+                // 1-4级普通通知：按应用合并，替换之前的通知
+                displayCommonNotification(summary, channelId, color)
             }
             
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                notificationId,
-                detailIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            
-            // 构建通知
-            val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.ic_notification) // 需要添加这个图标
-                .setContentTitle(summary.title)
-                .setContentText(summary.summary)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(summary.summary))
-                .setColor(color)
-                .setColorized(true)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .setGroup(summary.packageName) // 按应用分组
-                .setPriority(getNotificationPriority(summary.importanceLevel))
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .addAction(createViewDetailsAction(summary))
-                .apply {
-                    // 高重要性设置为持久化
-                    if (summary.importanceLevel == 3) {
-                        setOngoing(true)
-                        priority = NotificationCompat.PRIORITY_HIGH
-                    }
-                }
-                .build()
-            
-            // 显示通知
-            notificationManager.notify(notificationId, notification)
-            
-            // 检查是否需要创建分组摘要
-            createGroupSummaryIfNeeded(summary.packageName, summary.appName)
-            
-            Log.i(TAG, "Summary notification displayed: ${summary.title}")
+            Log.i(TAG, "Summary notification displayed: ${summary.title} (Level: ${summary.importanceLevel})")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error displaying summary notification", e)
         }
+    }
+    
+    /**
+     * 显示优先通知（5级，独立显示，常驻）
+     */
+    private fun displayPriorNotification(summary: SummaryData, channelId: String, color: Int) {
+        val notificationId = generateNotificationId(summary)
+        
+        // 创建意图
+        val detailIntent = Intent(context, NotificationDetailActivity::class.java).apply {
+            putExtra("summary_id", summary.id)
+            putExtra("package_name", summary.packageName)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            detailIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // 使用纯文本摘要
+        val summaryText = summary.summary
+        
+        // 构建优先通知
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(summary.title)
+            .setContentText(summaryText)
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(summaryText)
+                .setBigContentTitle("${summary.appName} - ${summary.title}")
+                .setSummaryText("优先摘要"))
+            .setColor(color)
+            .setColorized(true)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setOngoing(true) // 持久化显示
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .addAction(createViewDetailsAction(summary))
+            .build()
+        
+        // 显示通知
+        notificationManager.notify(notificationId, notification)
+    }
+    
+    /**
+     * 显示普通通知（1-4级，按应用合并替换）
+     */
+    private fun displayCommonNotification(summary: SummaryData, channelId: String, color: Int) {
+        // 使用固定的通知ID，这样同一应用的通知会相互替换
+        val notificationId = summary.packageName.hashCode()
+        
+        // 先取消该应用之前的普通通知
+        cancelCommonNotificationsForPackage(summary.packageName)
+        
+        // 创建意图
+        val detailIntent = Intent(context, NotificationDetailActivity::class.java).apply {
+            putExtra("summary_id", summary.id)
+            putExtra("package_name", summary.packageName)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            detailIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // 使用纯文本摘要
+        val summaryText = summary.summary
+        
+        // 构建普通通知
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(summary.title)
+            .setContentText(summaryText)
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(summaryText)
+                .setBigContentTitle("${summary.appName} - ${summary.title}")
+                .setSummaryText("普通摘要"))
+            .setColor(color)
+            .setColorized(true)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setGroup(summary.packageName) // 按应用分组
+            .setPriority(getNotificationPriority(summary.importanceLevel))
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .addAction(createViewDetailsAction(summary))
+            .build()
+        
+        // 显示通知
+        notificationManager.notify(notificationId, notification)
     }
     
     /**
@@ -183,7 +234,7 @@ class NotificationDisplayManager private constructor(private val context: Contex
             }
             
             if (activeNotifications >= 2) {
-                val groupSummary = NotificationCompat.Builder(context, CHANNEL_ID_NORMAL)
+                val groupSummary = NotificationCompat.Builder(context, CHANNEL_ID_COMMON)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("$appName 摘要")
                     .setContentText("${activeNotifications}条摘要")
@@ -230,14 +281,17 @@ class NotificationDisplayManager private constructor(private val context: Contex
         ).build()
     }
     
+
+    
+
+    
     /**
      * 根据重要性获取通知渠道ID
      */
     private fun getChannelIdByImportance(importanceLevel: Int): String {
         return when (importanceLevel) {
-            3 -> CHANNEL_ID_HIGH
-            2 -> CHANNEL_ID_NORMAL
-            else -> CHANNEL_ID_LOW
+            5 -> CHANNEL_ID_PRIOR // 5级：优先通知
+            else -> CHANNEL_ID_COMMON // 1-4级：普通通知
         }
     }
     
@@ -246,9 +300,11 @@ class NotificationDisplayManager private constructor(private val context: Contex
      */
     private fun getNotificationPriority(importanceLevel: Int): Int {
         return when (importanceLevel) {
-            3 -> NotificationCompat.PRIORITY_HIGH
-            2 -> NotificationCompat.PRIORITY_DEFAULT
-            else -> NotificationCompat.PRIORITY_LOW
+            5 -> NotificationCompat.PRIORITY_HIGH // 5级：高优先级
+            4 -> NotificationCompat.PRIORITY_DEFAULT // 4级：默认优先级
+            3 -> NotificationCompat.PRIORITY_DEFAULT // 3级：默认优先级
+            2 -> NotificationCompat.PRIORITY_LOW // 2级：低优先级
+            else -> NotificationCompat.PRIORITY_MIN // 1级：最低优先级
         }
     }
     
@@ -281,6 +337,20 @@ class NotificationDisplayManager private constructor(private val context: Contex
      */
     private fun generateNotificationId(summary: SummaryData): Int {
         return "${summary.packageName}_${summary.time}".hashCode()
+    }
+    
+    /**
+     * 取消指定应用的普通通知（1-4级）
+     */
+    private fun cancelCommonNotificationsForPackage(packageName: String) {
+        try {
+            // 取消该应用的普通通知（使用固定ID）
+            notificationManager.cancel(packageName.hashCode())
+            
+            Log.d(TAG, "Cancelled common notifications for $packageName")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cancelling common notifications", e)
+        }
     }
     
     /**

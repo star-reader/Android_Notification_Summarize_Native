@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardSummary"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="3dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0.5dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="?attr/colorSurfaceContainer">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <!-- 顶部区域：应用信息和时间 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
+
+            <!-- 应用图标 -->
+            <ImageView
+                android:id="@+id/imageAppIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:scaleType="centerCrop"
+                tools:src="@drawable/ic_app_default" />
+
+            <!-- 应用名称和时间 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/textAppName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp"
+                    tools:text="微信" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/textTimestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="2分钟前" />
+
+            </LinearLayout>
+
+            <!-- 重要性指示器 -->
+            <View
+                android:id="@+id/viewImportanceIndicator"
+                android:layout_width="3dp"
+                android:layout_height="24dp"
+                android:background="@drawable/importance_indicator_background"
+                android:backgroundTint="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+        <!-- 摘要标题 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/textSummaryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="智能摘要标题" />
+
+        <!-- 摘要内容 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/textSummaryContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:lineSpacingExtra="0.5dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="这是一条智能摘要的内容，显示了关键信息的概要。这里会显示通知的主要内容。" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView> 
