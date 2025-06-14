@@ -15,6 +15,7 @@ import top.usagijin.summary.MainActivity
 import top.usagijin.summary.R
 import top.usagijin.summary.data.SummaryData
 import top.usagijin.summary.utils.PermissionHelper
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 通知发送服务
@@ -32,6 +33,12 @@ object NotificationSenderService {
     
     // 通知组
     private const val GROUP_SUMMARY = "summary_group"
+    
+    // 通知ID计数器，确保每个通知都有唯一ID
+    private val notificationIdCounter = AtomicInteger(1000)
+    
+    // 存储已发送的通知ID，用于管理
+    private val activeNotificationIds = mutableSetOf<Int>()
     
     /**
      * 初始化通知渠道
@@ -100,14 +107,20 @@ object NotificationSenderService {
         
         try {
             val channelId = getChannelIdForImportance(summary.importanceLevel)
-            val notificationId = generateNotificationId(summary)
+            val notificationId = generateUniqueNotificationId(summary)
             
             val notification = createSummaryNotification(context, summary, channelId)
+                .setGroup(GROUP_SUMMARY) // 将所有摘要通知加入同一组
             
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(notificationId, notification.build())
             
-            Log.d(TAG, "Summary notification sent for ${summary.appName}")
+            // 记录活跃的通知ID
+            synchronized(activeNotificationIds) {
+                activeNotificationIds.add(notificationId)
+            }
+            
+            Log.d(TAG, "Summary notification sent for ${summary.appName} with ID: $notificationId")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error sending summary notification", e)
@@ -125,21 +138,29 @@ object NotificationSenderService {
         
         try {
             val notificationManager = NotificationManagerCompat.from(context)
+            val sentNotificationIds = mutableListOf<Int>()
             
             // 发送各个摘要通知
             summaries.forEach { summary ->
                 val channelId = getChannelIdForImportance(summary.importanceLevel)
-                val notificationId = generateNotificationId(summary)
+                val notificationId = generateUniqueNotificationId(summary)
                 
                 val notification = createSummaryNotification(context, summary, channelId)
                     .setGroup(GROUP_SUMMARY)
                 
                 notificationManager.notify(notificationId, notification.build())
+                sentNotificationIds.add(notificationId)
+            }
+            
+            // 记录活跃的通知ID
+            synchronized(activeNotificationIds) {
+                activeNotificationIds.addAll(sentNotificationIds)
             }
             
             // 发送分组摘要通知
             val groupSummaryNotification = createGroupSummaryNotification(context, summaries)
-            notificationManager.notify(GROUP_SUMMARY.hashCode(), groupSummaryNotification.build())
+            val groupNotificationId = GROUP_SUMMARY.hashCode()
+            notificationManager.notify(groupNotificationId, groupSummaryNotification.build())
             
             Log.d(TAG, "Grouped summary notifications sent for ${summaries.size} summaries")
             
@@ -161,6 +182,7 @@ object NotificationSenderService {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("navigate_to", "summaries")
+            putExtra("summary_id", summary.id)
         }
         
         val pendingIntent = PendingIntent.getActivity(
@@ -175,8 +197,8 @@ object NotificationSenderService {
         
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(icon)
-            .setContentTitle("${getImportanceEmoji(summary.importanceLevel)} ${summary.title}")
-            .setContentText(summary.summary)
+            .setContentTitle("${getImportanceEmoji(summary.importanceLevel)} ${summary.appName}")
+            .setContentText(summary.title)
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText(summary.summary)
@@ -190,8 +212,9 @@ object NotificationSenderService {
             .setAutoCancel(true)
             .setShowWhen(true)
             .setWhen(parseTimeToMillis(summary.time))
-            .setSubText(summary.appName)
+            .setSubText("${summary.appName} • 智能摘要")
             .addAction(createViewDetailsAction(context, summary))
+            .setOngoing(summary.importanceLevel == 3) // 高优先级设为持续通知
     }
     
     /**
@@ -214,18 +237,25 @@ object NotificationSenderService {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
+        // 按重要性分组统计
+        val highPriorityCount = summaries.count { it.importanceLevel == 3 }
+        val mediumPriorityCount = summaries.count { it.importanceLevel == 2 }
+        val lowPriorityCount = summaries.count { it.importanceLevel == 1 }
+        
         // 创建收件箱样式
         val inboxStyle = NotificationCompat.InboxStyle()
             .setBigContentTitle("智能摘要 (${summaries.size}条)")
-            .setSummaryText("点击查看详情")
+            .setSummaryText("${highPriorityCount} ${mediumPriorityCount} ${lowPriorityCount}")
         
-        // 添加摘要行（最多5条）
-        summaries.take(5).forEach { summary ->
-            inboxStyle.addLine("${getImportanceEmoji(summary.importanceLevel)} ${summary.appName}: ${summary.title}")
+        // 按重要性排序并添加摘要行（最多7条）
+        val sortedSummaries = summaries.sortedByDescending { it.importanceLevel }
+        sortedSummaries.take(7).forEach { summary ->
+            val timeStr = formatTime(summary.time)
+            inboxStyle.addLine("${getImportanceEmoji(summary.importanceLevel)} ${summary.appName} • $timeStr")
         }
         
-        if (summaries.size > 5) {
-            inboxStyle.addLine("还有 ${summaries.size - 5} 条摘要...")
+        if (summaries.size > 7) {
+            inboxStyle.addLine("还有 ${summaries.size - 7} 条摘要...")
         }
         
         return NotificationCompat.Builder(context, CHANNEL_ID_MEDIUM_PRIORITY)
@@ -233,13 +263,14 @@ object NotificationSenderService {
             .setContentTitle("智能摘要")
             .setContentText("收到 ${summaries.size} 条新摘要")
             .setStyle(inboxStyle)
-                            .setColor(ContextCompat.getColor(context, R.color.primary))
+            .setColor(ContextCompat.getColor(context, R.color.primary))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setGroup(GROUP_SUMMARY)
             .setGroupSummary(true)
             .setShowWhen(true)
+            .setNumber(summaries.size)
     }
     
     /**
@@ -311,10 +342,20 @@ object NotificationSenderService {
     }
     
     /**
-     * 生成通知ID
+     * 生成唯一通知ID
      */
-    private fun generateNotificationId(summary: SummaryData): Int {
-        return "${summary.packageName}_${summary.time}".hashCode()
+    private fun generateUniqueNotificationId(summary: SummaryData): Int {
+        // 方法1：使用摘要的唯一ID
+        if (summary.id.isNotEmpty()) {
+            return summary.id.hashCode()
+        }
+        
+        // 方法2：使用多个字段组合生成唯一ID
+        val uniqueString = "${summary.packageName}_${summary.time}_${summary.summary.hashCode()}_${System.nanoTime()}"
+        return uniqueString.hashCode()
+        
+        // 方法3：如果以上都不行，使用计数器（备用方案）
+        // return notificationIdCounter.getAndIncrement()
     }
     
     /**
@@ -360,7 +401,18 @@ object NotificationSenderService {
     fun clearAllSummaryNotifications(context: Context) {
         try {
             val notificationManager = NotificationManagerCompat.from(context)
-            notificationManager.cancelAll()
+            
+            // 清除所有活跃的通知
+            synchronized(activeNotificationIds) {
+                activeNotificationIds.forEach { notificationId ->
+                    notificationManager.cancel(notificationId)
+                }
+                activeNotificationIds.clear()
+            }
+            
+            // 清除分组摘要通知
+            notificationManager.cancel(GROUP_SUMMARY.hashCode())
+            
             Log.d(TAG, "All summary notifications cleared")
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing notifications", e)
@@ -373,11 +425,39 @@ object NotificationSenderService {
     fun clearSummaryNotification(context: Context, summary: SummaryData) {
         try {
             val notificationManager = NotificationManagerCompat.from(context)
-            val notificationId = generateNotificationId(summary)
+            val notificationId = generateUniqueNotificationId(summary)
             notificationManager.cancel(notificationId)
+            
+            // 从活跃通知列表中移除
+            synchronized(activeNotificationIds) {
+                activeNotificationIds.remove(notificationId)
+            }
+            
             Log.d(TAG, "Summary notification cleared for ${summary.appName}")
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing notification", e)
+        }
+    }
+    
+    /**
+     * 清除老旧通知（可选功能）
+     */
+    fun clearOldNotifications(context: Context, maxAge: Long = 24 * 60 * 60 * 1000) {
+        try {
+            // 这里可以实现清除超过指定时间的通知的逻辑
+            // 需要配合数据库来跟踪通知的时间
+            Log.d(TAG, "Old notifications cleanup requested")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing old notifications", e)
+        }
+    }
+    
+    /**
+     * 获取活跃通知数量
+     */
+    fun getActiveNotificationCount(): Int {
+        return synchronized(activeNotificationIds) {
+            activeNotificationIds.size
         }
     }
 } 
