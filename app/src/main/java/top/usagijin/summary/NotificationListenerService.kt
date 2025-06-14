@@ -63,7 +63,7 @@ class NotificationListenerService : NotificationListenerService() {
         
         // 初始化组件
         repository = NotificationRepository.getInstance(this)
-        apiService = ApiService.getInstance()
+        apiService = ApiService.getInstance(this)
         displayManager = NotificationDisplayManager.getInstance(this)
         
         // 启动批量处理工作

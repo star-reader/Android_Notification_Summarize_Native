@@ -37,7 +37,7 @@ data class SummaryData(
     val appName: String,
     val title: String,
     val summary: String,
-    val importanceLevel: Int, // 1=低, 2=中, 3=高
+    val importanceLevel: Int, // 1-5级，1=最低，5=最高（优先通知）
     val time: String // 格式: "yyyy-MM-dd HH:mm:ss"
 ) : Parcelable
 

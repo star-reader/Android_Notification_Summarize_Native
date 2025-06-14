@@ -85,6 +85,9 @@ dependencies {
     // Preferences
     implementation("androidx.preference:preference-ktx:1.2.1")
     
+    // Security (EncryptedSharedPreferences) - 暂时注释，网络问题
+    // implementation("androidx.security:security-crypto:1.0.0")
+    
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

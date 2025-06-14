@@ -20,6 +20,12 @@ import top.usagijin.summary.ui.fragment.SettingsFragment
 import top.usagijin.summary.ui.fragment.SummariesFragment
 import top.usagijin.summary.utils.PermissionHelper
 import top.usagijin.summary.service.NotificationSenderService
+import top.usagijin.summary.api.ApiService
+import top.usagijin.summary.utils.WorkManagerScheduler
+import top.usagijin.summary.utils.TestNotificationSender
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * 主界面Activity
@@ -54,6 +60,8 @@ class MainActivity : AppCompatActivity() {
             setupUI()
             setupBottomNavigation()
             checkAndRequestPermissions()
+            initializeApiService()
+            initializeTestNotifications()
             
             // 默认显示通知页面
             if (savedInstanceState == null) {
@@ -181,6 +189,48 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "Notification listener permission not granted")
             // 这个权限需要用户手动在设置中开启，不能通过代码直接请求
         }
+    }
+    
+    /**
+     * 初始化API服务
+     */
+    private fun initializeApiService() {
+        Log.d(TAG, "Initializing API service...")
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val apiService = ApiService.getInstance(this@MainActivity)
+                val initialized = apiService.initialize()
+                
+                if (initialized) {
+                    Log.i(TAG, "API service initialized successfully")
+                    
+                    // 启动Token刷新定期任务
+                    WorkManagerScheduler.scheduleTokenRefresh(this@MainActivity)
+                } else {
+                    Log.w(TAG, "API service initialization failed")
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error initializing API service", e)
+            }
+        }
+    }
+    
+    /**
+     * 初始化测试通知
+     */
+    private fun initializeTestNotifications() {
+        TestNotificationSender.initializeChannel(this)
+        
+        // 注释掉自动测试通知，等待真实通知触发
+        // if (top.usagijin.summary.private_config.ApiTestConfig.ENABLE_TEST_MODE) {
+        //     CoroutineScope(Dispatchers.Main).launch {
+        //         kotlinx.coroutines.delay(5000) // 等待5秒
+        //         Log.d(TAG, "Sending test notification...")
+        //         TestNotificationSender.sendLongNotification(this@MainActivity)
+        //     }
+        // }
     }
     
     /**
